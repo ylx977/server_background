@@ -11,6 +11,7 @@ import lombok.Data;
 import javax.persistence.Column;
 
 /**
+ * @author ylx
  * Created by fuzamei on 2018/4/21.
  */
 @QBindEntity(entityClass = MarketPrice.class)

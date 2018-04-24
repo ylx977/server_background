@@ -15,6 +15,8 @@ public class FrontUserBO {
 
     private String username;
 
+    private String personName;
+
     private String phoneNumber;
 
     private String email;
@@ -26,5 +28,7 @@ public class FrontUserBO {
     private Integer startTime;
 
     private Integer endTime;
+
+    private Integer coinType;
 
 }

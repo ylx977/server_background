@@ -48,6 +48,8 @@ public enum BackAuthesEnum {
     UPDATE_BANNER(24L,"更新轮播图信息","/api/backstage/bannerConfig/updateBanner"),
     QUERY_BANNER(25L,"查询轮播图","/api/backstage/bannerConfig/queryBanners"),
 
+    QUERY_USER_ASSET(26L,"查询前台用户的资产","/api/backstage/assetManagement/account/queryFrontUserAccount")
+
 //    CONFIRM_COLEDN_CHECKOUT(22L,"确认黄金出库","/api/backstage/goldenWithdraw/confirmCheckout"),
 
 
