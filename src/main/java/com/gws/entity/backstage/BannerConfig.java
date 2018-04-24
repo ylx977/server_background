@@ -9,19 +9,22 @@ import javax.persistence.Table;
 
 /**
  * @author ylx
- * Created by fuzamei on 2018/4/18.
+ * Created by fuzamei on 2018/4/24.
  */
 @Entity
 @Data
-@Table(name = "back_users_token")
-public class BackUserToken {
+@Table(name = "back_banner_config")
+public class BannerConfig {
 
     @Id
-    @Column(name = "uid")
-    private Long uid;
+    @Column(name = "id")
+    private Long id;
 
-    @Column(name = "token")
-    private String token;
+    @Column(name = "display_order")
+    private Integer displayOrder;
+
+    @Column(name = "display_interval")
+    private Integer displayInterval;
 
     @Column(name = "ctime")
     private Integer ctime;

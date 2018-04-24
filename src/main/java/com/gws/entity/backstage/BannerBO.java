@@ -9,8 +9,15 @@ import lombok.Data;
 @Data
 public class BannerBO {
 
+    /**
+     *
+     */
     private Integer displayOrder;
 
+    /**
+     *
+     */
     private Integer displayInterval;
+
 
 }

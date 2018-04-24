@@ -44,6 +44,10 @@ public enum BackAuthesEnum {
 
     UPDATE_FRONT_USERS(22L,"修改前台用户信息","/api/backstage/frontUserManagement/users/updateFrontUserInfo"),
 
+    BANNER_BASIC_CONFIG(23L,"后台banner轮播图基本参数配置","/api/backstage/bannerConfig/basicBannerConfig"),
+    UPDATE_BANNER(24L,"更新轮播图信息","/api/backstage/bannerConfig/updateBanner"),
+    QUERY_BANNER(25L,"查询轮播图","/api/backstage/bannerConfig/queryBanners"),
+
 //    CONFIRM_COLEDN_CHECKOUT(22L,"确认黄金出库","/api/backstage/goldenWithdraw/confirmCheckout"),
 
 

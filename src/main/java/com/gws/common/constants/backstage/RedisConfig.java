@@ -46,4 +46,9 @@ public class RedisConfig {
      */
     public static final String ALL_BACK_AUTHES_PREFIX = "ALL_backAuthes";
 
+    /**
+     * 后台轮播图基本配置信息(播放顺序和播放时间间隔)的redis前缀
+     */
+    public static final String BANNER_BASIC_CONFIG = "BANNER_BAISC_CONFIG";
+
 }
