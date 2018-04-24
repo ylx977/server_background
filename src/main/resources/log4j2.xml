@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+	<Properties>
+		<Property name="log4j2.level">info</Property>
+		<Property name="GWSLOG">log/gws.log</Property>
+		<Property name="SQLLOG">log/sql.log</Property>
+		<Property name="ACCESSLOG">log/access.log</Property>
+		<Property name="GWSREF">GWS_LOG</Property>
+	</Properties>
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT" follow="true">
+           <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %-5p: %m%n"/>
+        </Console>
+		<RollingFile name="GWS_LOG" fileName="${GWSLOG}"
+			filePattern="${GWSLOG}-%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout
+				pattern="[%d{yyyy-MM-dd HH:mm:ss}] %-5p: %m%n" />
+			<Policies>
+			    <TimeBasedTriggeringPolicy interval="24" modulate="true" />
+			</Policies>
+			<DefaultRolloverStrategy max="100" />
+		</RollingFile>
+		<RollingFile name="SQL_LOG" fileName="${SQLLOG}"
+			filePattern="${SQLLOG}-%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout
+				pattern="[%d{yyyy-MM-dd HH:mm:ss}] %-5p: %m%n" />
+			<Policies>
+			    <TimeBasedTriggeringPolicy interval="24" modulate="true" />
+			</Policies>
+			<DefaultRolloverStrategy max="100" />
+		</RollingFile>
+	    <RollingFile name="ACCESS_LOG" fileName="${ACCESSLOG}"
+			filePattern="${ACCESSLOG}-%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout
+				pattern="[%d{yyyy-MM-dd HH:mm:ss}] %-5p: %m%n" />
+			<Policies>
+			    <TimeBasedTriggeringPolicy interval="24" modulate="true" />
+			</Policies>
+			<DefaultRolloverStrategy max="100" />
+		</RollingFile>
+		<Async name="ASYNC">
+			<AppenderRef ref="SQL_LOG" />
+			<AppenderRef ref="ACCESS_LOG" />
+			<AppenderRef ref="${GWSREF}" />
+		</Async>
+    </Appenders>
+    <Loggers>
+        <!--<Logger name="org.springframework.security" level="warn"
+            additivity="false">
+            <appender-ref ref="${GWSREF}" />
+        </Logger>
+         <Logger name="org.springframework" level="error"
+            additivity="false">
+            <appender-ref ref="${GWSREF}" />
+        </Logger>
+         <Logger name="org.apache" level="warn"
+            additivity="false">
+            <appender-ref ref="${GWSREF}" />
+        </Logger>
+          <Logger name="org.thymeleaf" level="warn"
+            additivity="false">
+            <appender-ref ref="${GWSREF}" />
+        </Logger>
+        <Logger name="org.hibernate" level="error"
+            additivity="false">
+            <appender-ref ref="${GWSREF}" />
+        </Logger>
+       <Logger name="com.alibaba.druid" level="error"
+            additivity="false">
+            <appender-ref ref="${GWSREF}" />
+        </Logger>     
+        
+       <logger name="org.springframework.boot" level="info" additivity="false">
+            <appender-ref ref="${GWSREF}" />
+       </logger>  -->
+       
+       <logger name="SQLTRACE" level="info" additivity="false">
+              <appender-ref ref="SQL_LOG"/>
+       </logger>
+       
+       <logger name="ACCESSTRACE" level="info" additivity="false">
+              <appender-ref ref="ACCESS_LOG"/>
+       </logger>
+       
+        <logger name="GWS" level="info" additivity="false">
+            <appender-ref ref="${GWSREF}" />
+       </logger> 
+       
+        <Root level="${sys:log4j2.level}">
+            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="ASYNC"/>
+        </Root>
+    </Loggers>
+</Configuration>

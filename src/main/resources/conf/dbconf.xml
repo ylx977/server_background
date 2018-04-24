@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="md_0" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="true">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="${spring.master.datasource1.url}"/>
+        <property name="username" value="${spring.master.datasource.username}"/>
+        <property name="password" value="${spring.master.datasource.password}"/>
+        <property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/> 
+        <property name="filters" value="${spring.datasource.filters}"/>
+    </bean>
+    
+    <!--<bean id="ds_1" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="false">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="${spring.master.datasource2.url}"/>-->
+        <!--<property name="username" value="${spring.master.datasource.username}"/>-->
+        <!--<property name="password" value="${spring.master.datasource.password}"/>-->
+        <!--<property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/>    -->
+        <!--<property name="filters" value="${spring.datasource.filters}"/>-->
+    <!--</bean>-->
+    
+    <!--<bean id="ds_2" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="false">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="${spring.master.datasource3.url}"/>-->
+        <!--<property name="username" value="${spring.master.datasource.username}"/>-->
+        <!--<property name="password" value="${spring.master.datasource.password}"/>-->
+        <!--<property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/>  -->
+        <!--<property name="filters" value="${spring.datasource.filters}"/>-->
+    <!--</bean>-->
+    
+     <!--<bean id="ds_3" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="false">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="${spring.master.datasource4.url}"/>-->
+        <!--<property name="username" value="${spring.master.datasource.username}"/>-->
+        <!--<property name="password" value="${spring.master.datasource.password}"/>-->
+        <!--<property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/>  -->
+        <!--<property name="filters" value="${spring.datasource.filters}"/>-->
+    <!--</bean>-->
+    
+     <!--<bean id="ds_4" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="false">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="${spring.master.datasource5.url}"/>-->
+        <!--<property name="username" value="${spring.master.datasource.username}"/>-->
+        <!--<property name="password" value="${spring.master.datasource.password}"/>-->
+        <!--<property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/>  -->
+        <!--<property name="filters" value="${spring.datasource.filters}"/>-->
+    <!--</bean>-->
+    
+     <bean id="sd_0" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="false">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="${spring.slave.datasource1.url}"/>
+        <property name="username" value="${spring.slave.datasource.username}"/>
+        <property name="password" value="${spring.slave.datasource.password}"/>
+        <property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/>  
+        <property name="filters" value="${spring.datasource.filters}"/>  
+    </bean>
+    
+    <!--<bean id="s_ds_1" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="false">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="${spring.slave.datasource2.url}"/>-->
+        <!--<property name="username" value="${spring.slave.datasource.username}"/>-->
+        <!--<property name="password" value="${spring.slave.datasource.password}"/>-->
+        <!--<property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/>  -->
+        <!--<property name="filters" value="${spring.datasource.filters}"/>  -->
+    <!--</bean>-->
+    
+    <!--<bean id="s_ds_2" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="false">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="${spring.slave.datasource3.url}"/>-->
+        <!--<property name="username" value="${spring.slave.datasource.username}"/>-->
+        <!--<property name="password" value="${spring.slave.datasource.password}"/>-->
+        <!--<property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/>  -->
+        <!--<property name="filters" value="${spring.datasource.filters}"/>  -->
+    <!--</bean>-->
+    
+     <!--<bean id="s_ds_3" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="false">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="${spring.slave.datasource4.url}"/>-->
+        <!--<property name="username" value="${spring.slave.datasource.username}"/>-->
+        <!--<property name="password" value="${spring.slave.datasource.password}"/>-->
+        <!--<property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/>  -->
+        <!--<property name="filters" value="${spring.datasource.filters}"/>  -->
+    <!--</bean>-->
+    
+     <!--<bean id="s_ds_4" class="com.alibaba.druid.pool.DruidDataSource"  destroy-method="close" primary="false">-->
+        <!--<property name="driverClassName" value="com.mysql.jdbc.Driver"/>-->
+        <!--<property name="url" value="${spring.slave.datasource5.url}"/>-->
+        <!--<property name="username" value="${spring.slave.datasource.username}"/>-->
+        <!--<property name="password" value="${spring.slave.datasource.password}"/>-->
+        <!--<property name="useGlobalDataSourceStat" value="${spring.datasource.useGlobalDataSourceStat}"/>  -->
+        <!--<property name="filters" value="${spring.datasource.filters}"/>  -->
+    <!--</bean>-->
+    
+     <bean id="m_dataSourceRule" class="com.gws.rdb.sharding.api.rule.DataSourceRule">
+        <constructor-arg>
+            <map>
+                <entry key="md_0" value-ref="md_0"/>
+                <!--<entry key="ds_1" value-ref="ds_1"/>-->
+                <!--<entry key="ds_2" value-ref="ds_2"/>-->
+                <!--<entry key="ds_3" value-ref="ds_3"/>-->
+                <!--<entry key="ds_4" value-ref="ds_4"/>-->
+            </map>
+        </constructor-arg>
+    </bean>
+    
+    <bean id="s_dataSourceRule" class="com.gws.rdb.sharding.api.rule.DataSourceRule">
+        <constructor-arg>
+            <map>
+                <entry key="sd_0" value-ref="sd_0"/>
+                <!--<entry key="ss_1" value-ref="s_ds_1"/>-->
+                <!--<entry key="ss_2" value-ref="s_ds_2"/>-->
+                <!--<entry key="ss_3" value-ref="s_ds_3"/>-->
+                <!--<entry key="ss_4" value-ref="s_ds_4"/>                -->
+            </map>
+        </constructor-arg>
+    </bean>
+</beans>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="x-ua-compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0"/>
+    <title>游戏猫·喵盟</title>
+    <link rel="Shortcut Icon" th:href="${staticHost}+'/static/favicon.ico?'+${staticVersion}" />
+    <script th:inline="javascript">
+        window.resourceBaseUrl = [[${staticHost}]];
+        window.baseUrl = '/';
+        window.suffix = '';
+        window.loginUrl = './loginUrl';
+        window.gameShareUrl = "https://m.youximao.tv/mpages/shareIndex.html?channelId="+[[${channelId}]] ;
+        window.officialUrl ='http://www.youximao.com/';
+        window.weChatUrl='http://weixin.qq.com/r/Pzu5oV7EvQPCrRrC924t';
+    </script>
+    <link href="//static-meng.dm.com/static/css/app.css" th:href="${staticHost}+'/static/css/app.css?'+${staticVersion}" rel="stylesheet"/>
+</head>
+
+<body>
+<div id="app-box"></div>
+<script type="text/javascript" src="//static-meng.dm.com/static/js/manifest.js" th:src="${staticHost}+'/static/js/manifest.js?'+${staticVersion}"></script>
+<script type="text/javascript" src="//static-meng.dm.com/static/js/vendor.js" th:src="${staticHost}+'static/js/vendor.js?'+${staticVersion}"></script>
+<script type="text/javascript" src="//static-meng.dm.com/static/js/app.js" th:src="${staticHost}+'static/js/app.js?'+${staticVersion}"></script>
+</body>
+
+</html>

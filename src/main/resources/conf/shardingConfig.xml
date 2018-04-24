@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd">
+<!--此文件不用修改     -->                    
+    <import resource="masterShardingContext.xml"/>        
+    <import resource="slaveShardingContext.xml"/>       
+    <bean id="mastersds" class="com.gws.rdb.sharding.api.ShardingDataSource">
+        <constructor-arg name="shardingRule" ref="mastershardingRule"/>
+    </bean>
+    <bean id="slavesds" class="com.gws.rdb.sharding.api.ShardingDataSource">
+        <constructor-arg name="shardingRule" ref="slaveshardingRule"/>
+    </bean>
+</beans>
