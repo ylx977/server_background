@@ -2,7 +2,9 @@ package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.BannerDisplayOrder;
 import com.gws.controllers.BaseApiController;
+import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
+import com.gws.controllers.api.BaseToolController;
 import com.gws.entity.backstage.BannerBO;
 import com.gws.entity.backstage.BannerVO;
 import com.gws.enums.SystemCode;
@@ -13,6 +15,7 @@ import com.gws.utils.validate.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,7 +27,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 @RestController
 @RequestMapping("/api/backstage/bannerConfig")
-public class BackBannerConfigController extends BaseApiController{
+public class BackBannerConfigController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackBannerConfigController.class);
 
