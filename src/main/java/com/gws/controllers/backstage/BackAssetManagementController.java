@@ -92,7 +92,7 @@ public class BackAssetManagementController extends BaseApiController{
      * @param frontUserBO
      * @return
      */
-    @RequestMapping("/topUpHistory/queryFrontUserRecharge")
+    @RequestMapping("/topUp/queryFrontUserRecharge")
     public JsonResult queryFrontUserRecharge(@RequestBody FrontUserBO frontUserBO){
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},查询前台用户的充币记录",uid);
@@ -117,5 +117,38 @@ public class BackAssetManagementController extends BaseApiController{
             return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
         }
     }
+
+
+    //===================================以下是前台用户资产模块(资产余额子模块)==================================================
+
+    /**
+     * 查询平台的资产余额，包括bty和usdg
+     * @return
+     */
+    @RequestMapping("/balance/queryAssetBalance")
+    public JsonResult queryAssetBalance(){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},查询平台的资产余额",uid);
+
+        return null;
+    }
+
+    /**
+     * 增加平台usdg总量
+     * {
+     *     "usdg"
+     * }
+     * @return
+     */
+    @RequestMapping("/balance/addUsdg")
+    public JsonResult addUsdg(){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},增加平台usdg总量",uid);
+
+        return null;
+    }
+
+    //===================================以下是前台用户资产模块(提币记录子模块)==================================================
+
 
 }
