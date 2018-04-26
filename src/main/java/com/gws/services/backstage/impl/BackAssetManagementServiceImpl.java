@@ -1,24 +1,27 @@
 package com.gws.services.backstage.impl;
 
 import com.gws.common.constants.backstage.CoinType;
+import com.gws.common.constants.backstage.CoinWithdrawStatusEnum;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.*;
-import com.gws.repositories.query.backstage.FrontUserQuery;
-import com.gws.repositories.query.backstage.FrontUserRechargeQuery;
-import com.gws.repositories.query.backstage.UsdgUserAccountQuery;
-import com.gws.repositories.slave.backstage.FrontUserAccountSlave;
-import com.gws.repositories.slave.backstage.FrontUserRechargeSlave;
-import com.gws.repositories.slave.backstage.FrontUserSlave;
-import com.gws.repositories.slave.backstage.UserIdentitySlave;
+import com.gws.repositories.master.backstage.FrontUserAccountMaster;
+import com.gws.repositories.master.backstage.FrontUserCoinWithdrawMaster;
+import com.gws.repositories.master.backstage.PlatformUsdgMaster;
+import com.gws.repositories.master.backstage.UsdgOfficialAccountMaster;
+import com.gws.repositories.query.backstage.*;
+import com.gws.repositories.slave.backstage.*;
 import com.gws.services.backstage.BackAssetManagementService;
+import com.gws.utils.decimal.DecimalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.RoundingMode;
 import java.util.*;
 
 /**
@@ -32,16 +35,37 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
 
     private final FrontUserAccountSlave frontUserAccountSlave;
 
+    private final FrontUserAccountMaster frontUserAccountMaster;
+
     private final FrontUserRechargeSlave frontUserRechargeSlave;
+
+    private final PlatformUsdgSlave platformUsdgSlave;
+
+    private final PlatformUsdgMaster platformUsdgMaster;
+
+    private final UsdgOfficialAccountMaster usdgOfficialAccountMaster;
+
+    private final UsdgOfficialAccountSlave usdgOfficialAccountSlave;
+
+    private final FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster;
+
+    private final FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave;
 
     private final UserIdentitySlave userIdentitySlave;
 
     @Autowired
-    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave) {
+    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave) {
         this.frontUserSlave = frontUserSlave;
         this.frontUserAccountSlave = frontUserAccountSlave;
+        this.frontUserAccountMaster = frontUserAccountMaster;
         this.userIdentitySlave = userIdentitySlave;
         this.frontUserRechargeSlave = frontUserRechargeSlave;
+        this.platformUsdgSlave = platformUsdgSlave;
+        this.platformUsdgMaster = platformUsdgMaster;
+        this.usdgOfficialAccountMaster = usdgOfficialAccountMaster;
+        this.usdgOfficialAccountSlave = usdgOfficialAccountSlave;
+        this.frontUserCoinWithdrawMaster = frontUserCoinWithdrawMaster;
+        this.frontUserCoinWithdrawSlave = frontUserCoinWithdrawSlave;
     }
 
     @Override
@@ -152,5 +176,287 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         long totalPage = frontUserRechargePage == null ? 0 : frontUserRechargePage.getTotalElements();
 
         return PageDTO.getPagination(totalPage,list);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addUsdg(AssetBO assetBO) {
+        Double gold = assetBO.getGold();
+        double increasement = DecimalUtil.multiply(gold,100000,8, RoundingMode.HALF_EVEN);
+
+        PlatformUsdg one = platformUsdgSlave.findOne(1L);
+        if(one != null){
+            //平台总的usdg插入数据
+            Double totalUsdg = one.getTotalUsdg();
+            PlatformUsdg platformUsdg = new PlatformUsdg();
+            platformUsdg.setTotalUsdg(DecimalUtil.add(gold, totalUsdg, 8, RoundingMode.HALF_EVEN));
+            platformUsdgMaster.updateById(platformUsdg,1L, "totalUsdg");
+
+            //更新平台的usdg账户中总usdg数量和可用usdg数量
+            UsdgOfficialAccountQuery usdgOfficialAccountQuery = new UsdgOfficialAccountQuery();
+            usdgOfficialAccountQuery.setType(CoinType.USDG);
+            UsdgOfficialAccount second = usdgOfficialAccountSlave.findOne(usdgOfficialAccountQuery);
+            if(second == null){
+                throw new RuntimeException("平台usdg账户信息丢失");
+            }
+
+            UsdgOfficialAccount usdgOfficialAccount = new UsdgOfficialAccount();
+            Long id = second.getId();
+            Double realAmount = second.getRealAmount();
+            Double usableAmount = second.getUsableAmount();
+            usdgOfficialAccount.setRealAmount(DecimalUtil.add(realAmount,increasement,8,RoundingMode.HALF_EVEN));
+            usdgOfficialAccount.setUsableAmount(DecimalUtil.add(usableAmount,increasement,8,RoundingMode.HALF_EVEN));
+            usdgOfficialAccountMaster.updateById(usdgOfficialAccount, id,"realAmount","usableAmount");
+            return;
+        }
+
+        //平台总的usdg插入数据
+        PlatformUsdg platformUsdg = new PlatformUsdg();
+        platformUsdg.setId(1L);
+        platformUsdg.setTotalUsdg(increasement);
+        platformUsdgMaster.save(platformUsdg);
+        //平台的账户插入数据
+        UsdgOfficialAccount usdgOfficialAccount = new UsdgOfficialAccount();
+        usdgOfficialAccount.setId(1L);
+        usdgOfficialAccount.setType(CoinType.USDG);
+        usdgOfficialAccount.setAddress("to be done");//TODO
+        usdgOfficialAccount.setPublicKey("to be done");//TODO
+        usdgOfficialAccount.setPrivateKey("to be done");//TODO
+        usdgOfficialAccount.setRealAmount(increasement);
+        usdgOfficialAccount.setUsableAmount(increasement);
+        usdgOfficialAccount.setFreezeAmount(0d);
+        usdgOfficialAccountMaster.save(usdgOfficialAccount);
+    }
+
+    @Override
+    public PageDTO queryFrontUserWithdraw(FrontUserBO frontUserBO) {
+        Integer page = frontUserBO.getPage();
+        Integer rowNum = frontUserBO.getRowNum();
+        Integer startTime = frontUserBO.getStartTime();
+        Integer endTime = frontUserBO.getEndTime();
+
+        FrontUserWithdrawApplyQuery frontUserWithdrawApplyQuery = new FrontUserWithdrawApplyQuery();
+
+        if(!StringUtils.isEmpty(frontUserBO.getPhoneNumber())){
+            frontUserWithdrawApplyQuery.setPhoneNumberLike(frontUserBO.getPhoneNumber());
+        }
+        if(!StringUtils.isEmpty(frontUserBO.getEmail())){
+            frontUserWithdrawApplyQuery.setEmailLike(frontUserBO.getEmail());
+        }
+        if(!StringUtils.isEmpty(frontUserBO.getPersonName())){
+            frontUserWithdrawApplyQuery.setPersonNameLike(frontUserBO.getPersonName());
+        }
+        if(frontUserBO.getCoinType()!=null){
+            frontUserWithdrawApplyQuery.setCoinType(frontUserBO.getCoinType());
+        }
+        if(frontUserBO.getUid()!=null){
+            frontUserWithdrawApplyQuery.setUid(frontUserBO.getUid());
+        }
+        frontUserWithdrawApplyQuery.setApplyStatuses(Arrays.asList(CoinWithdrawStatusEnum.TO_CHECK.getCode(),CoinWithdrawStatusEnum.FIRST_PASS.getCode()));
+        frontUserWithdrawApplyQuery.setCstartTime(startTime);
+        frontUserWithdrawApplyQuery.setCendTime(endTime);
+
+        //按照创建时间倒序排列
+        Sort sort = new Sort(Sort.Direction.DESC,"ctime");
+        Pageable pageable = new PageRequest(page - 1,rowNum,sort);
+        Page<FrontUserWithdrawApply> frontUserWithdrawApplyPage = frontUserCoinWithdrawSlave.findAll(frontUserWithdrawApplyQuery, pageable);
+
+        List<FrontUserWithdrawApply> list = frontUserWithdrawApplyPage == null ? Collections.emptyList() : frontUserWithdrawApplyPage.getContent();
+        long totalPage = frontUserWithdrawApplyPage == null ? 0 : frontUserWithdrawApplyPage.getTotalElements();
+
+        return PageDTO.getPagination(totalPage,list);
+    }
+
+    @Override
+    public PageDTO queryFrontUserWithdrawHistory(FrontUserBO frontUserBO) {
+        Integer page = frontUserBO.getPage();
+        Integer rowNum = frontUserBO.getRowNum();
+        Integer startTime = frontUserBO.getStartTime();
+        Integer endTime = frontUserBO.getEndTime();
+
+        FrontUserWithdrawApplyQuery frontUserWithdrawApplyQuery = new FrontUserWithdrawApplyQuery();
+
+        if(!StringUtils.isEmpty(frontUserBO.getPhoneNumber())){
+            frontUserWithdrawApplyQuery.setPhoneNumberLike(frontUserBO.getPhoneNumber());
+        }
+        if(!StringUtils.isEmpty(frontUserBO.getEmail())){
+            frontUserWithdrawApplyQuery.setEmailLike(frontUserBO.getEmail());
+        }
+        if(!StringUtils.isEmpty(frontUserBO.getPersonName())){
+            frontUserWithdrawApplyQuery.setPersonNameLike(frontUserBO.getPersonName());
+        }
+        if(frontUserBO.getCoinType()!=null){
+            frontUserWithdrawApplyQuery.setCoinType(frontUserBO.getCoinType());
+        }
+        if(frontUserBO.getUid()!=null){
+            frontUserWithdrawApplyQuery.setUid(frontUserBO.getUid());
+        }
+        if(frontUserBO.getFirstCheckUid()!=null){
+            frontUserWithdrawApplyQuery.setFirstCheckUid(frontUserBO.getFirstCheckUid());
+        }
+        if(frontUserBO.getSecondCheckUid()!=null){
+            frontUserWithdrawApplyQuery.setSecondCheckUid(frontUserBO.getSecondCheckUid());
+        }
+        if(frontUserBO.getFirstCheckName()!=null){
+            frontUserWithdrawApplyQuery.setFirstCheckNameLike(frontUserBO.getFirstCheckName());
+        }
+        if(frontUserBO.getSecondCheckName()!=null){
+            frontUserWithdrawApplyQuery.setSecondCheckNameLike(frontUserBO.getSecondCheckName());
+        }
+        frontUserWithdrawApplyQuery.setApplyStatuses(Arrays.asList(CoinWithdrawStatusEnum.REJECT.getCode(),CoinWithdrawStatusEnum.SECOND_PASS.getCode()));
+        frontUserWithdrawApplyQuery.setCstartTime(startTime);
+        frontUserWithdrawApplyQuery.setCendTime(endTime);
+
+        //按照创建时间倒序排列
+        Sort sort = new Sort(Sort.Direction.DESC,"ctime");
+        Pageable pageable = new PageRequest(page - 1,rowNum,sort);
+        Page<FrontUserWithdrawApply> frontUserWithdrawApplyPage = frontUserCoinWithdrawSlave.findAll(frontUserWithdrawApplyQuery, pageable);
+
+        List<FrontUserWithdrawApply> list = frontUserWithdrawApplyPage == null ? Collections.emptyList() : frontUserWithdrawApplyPage.getContent();
+        long totalPage = frontUserWithdrawApplyPage == null ? 0 : frontUserWithdrawApplyPage.getTotalElements();
+
+        return PageDTO.getPagination(totalPage,list);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void firstPass(FrontUserBO frontUserBO) {
+        Integer currentTime = (int)System.currentTimeMillis()/1000;
+        Long id = frontUserBO.getId();
+        FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
+        if(one==null){
+            throw new RuntimeException("该申请信息不存在");
+        }
+        if(!one.getApplyStatus().equals(CoinWithdrawStatusEnum.TO_CHECK.getCode())){
+            throw new RuntimeException("该申请信息不为待审核状态");
+        }
+        FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
+        frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.FIRST_PASS.getCode());
+        frontUserWithdrawApply.setUtime(currentTime);
+        int success = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime");
+        if(success==0){
+            throw new RuntimeException("用户申请信息更新失败");
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void secondPass(FrontUserBO frontUserBO) {
+        Integer currentTime = (int)System.currentTimeMillis()/1000;
+        Long id = frontUserBO.getId();
+        FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
+        if(one==null){
+            throw new RuntimeException("该申请信息不存在");
+        }
+        if(!one.getApplyStatus().equals(CoinWithdrawStatusEnum.TO_CHECK.getCode())){
+            throw new RuntimeException("该申请信息不为待审核状态");
+        }
+        FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
+        frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.SECOND_PASS.getCode());
+        frontUserWithdrawApply.setUtime(currentTime);
+        int success = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime");
+        if(success==0){
+            throw new RuntimeException("用户申请信息更新失败");
+        }
+
+        /*
+         * 将钱和旷工费从用户的账户中扣除(扣除掉冻结那部分的钱)
+         */
+        //提取的数量
+        Double coinAmount = one.getCoinAmount();
+        //旷工费
+        Double minerAmount = one.getMinerAmount();
+        double totalAmount = DecimalUtil.add(coinAmount,minerAmount,8,RoundingMode.HALF_EVEN);
+        //币种类型
+        Integer coinType = one.getCoinType();
+        //申请该订单信息的人的uid
+        Long uid = one.getUid();
+
+        UsdgUserAccountQuery usdgUserAccountQuery = new UsdgUserAccountQuery();
+        usdgUserAccountQuery.setType(coinType);
+        usdgUserAccountQuery.setUid(uid);
+        UsdgUserAccount usdgUserAccount = frontUserAccountSlave.findOne(usdgUserAccountQuery);
+
+        //当前用户的账户id号
+        Long accountId = usdgUserAccount.getId();
+        //当前账户可用数量
+        Double usableAmount = usdgUserAccount.getUsableAmount();
+        //当前账户冻结数量
+        Double freezeAmount = usdgUserAccount.getFreezeAmount();
+
+        double freezeResult = DecimalUtil.subtract(freezeAmount,totalAmount,8,RoundingMode.HALF_EVEN);
+        double realResult = DecimalUtil.add(usableAmount,freezeResult,8,RoundingMode.HALF_EVEN);
+
+        UsdgUserAccount userAccount = new UsdgUserAccount();
+        userAccount.setFreezeAmount(freezeResult);
+        userAccount.setRealAmount(realResult);
+        userAccount.setUtime(currentTime);
+        int success2 = frontUserAccountMaster.updateById(userAccount, accountId, "realAmount", "freezeAmount", "utime");
+        if(success2 == 0){
+            throw new RuntimeException("用户账户信息更新失败");
+        }
+
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void rejectWithdraw(FrontUserBO frontUserBO) {
+        Integer currentTime = (int)System.currentTimeMillis()/1000;
+        Long id = frontUserBO.getId();
+        FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
+        if(one==null){
+            throw new RuntimeException("该申请信息不存在");
+        }
+        if(!one.getApplyStatus().equals(CoinWithdrawStatusEnum.TO_CHECK.getCode()) && !one.getApplyStatus().equals(CoinWithdrawStatusEnum.FIRST_PASS.getCode())){
+            throw new RuntimeException("该申请信息已经完成");
+        }
+
+        //更新申请信息的状态
+        FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
+        frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.REJECT.getCode());
+        frontUserWithdrawApply.setUtime(currentTime);
+        int success1 = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime");
+        if(success1 == 0){
+            throw new RuntimeException("用户申请信息更新失败");
+        }
+
+        /*
+         * 将钱和旷工费从冻结状态返还给该用户的账户
+         */
+        //提取的数量
+        Double coinAmount = one.getCoinAmount();
+        //旷工费
+        Double minerAmount = one.getMinerAmount();
+        double totalAmount = DecimalUtil.add(coinAmount,minerAmount,8,RoundingMode.HALF_EVEN);
+        //币种类型
+        Integer coinType = one.getCoinType();
+        //申请该订单信息的人的uid
+        Long uid = one.getUid();
+
+        UsdgUserAccountQuery usdgUserAccountQuery = new UsdgUserAccountQuery();
+        usdgUserAccountQuery.setType(coinType);
+        usdgUserAccountQuery.setUid(uid);
+        UsdgUserAccount usdgUserAccount = frontUserAccountSlave.findOne(usdgUserAccountQuery);
+
+        //当前用户的账户id号
+        Long accountId = usdgUserAccount.getId();
+        //当前账户可用数量
+        Double usableAmount = usdgUserAccount.getUsableAmount();
+        //当前账户冻结数量
+        Double freezeAmount = usdgUserAccount.getFreezeAmount();
+
+        double usableResult = DecimalUtil.add(totalAmount,usableAmount,8,RoundingMode.HALF_EVEN);
+        double freezeResult = DecimalUtil.subtract(freezeAmount,totalAmount,8,RoundingMode.HALF_EVEN);
+        double realResult = DecimalUtil.add(usableResult,freezeResult,8,RoundingMode.HALF_EVEN);
+
+        UsdgUserAccount userAccount = new UsdgUserAccount();
+        userAccount.setRealAmount(realResult);
+        userAccount.setUsableAmount(usableResult);
+        userAccount.setFreezeAmount(freezeResult);
+        userAccount.setUtime(currentTime);
+        int success2 = frontUserAccountMaster.updateById(userAccount, accountId, "realAmount","usableAmount", "freezeAmount", "utime");
+        if(success2 == 0){
+            throw new RuntimeException("用户账户信息更新失败");
+        }
     }
 }

@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -106,6 +107,36 @@ public class FrontUserServiceImpl implements FrontUserService {
         }
         frontUserApplyInfoQuery.setCstartTime(frontUserBO.getStartTime());
         frontUserApplyInfoQuery.setCendTime(frontUserBO.getEndTime());
+        frontUserApplyInfoQuery.setApplyStatus(FrontUserApplyStatusEnum.TO_CHECK.getCode());
+
+        //按照创建时间倒序排列
+        Sort sort = new Sort(Sort.Direction.DESC,"ctime");
+        Pageable pageable = new PageRequest(page - 1,rowNum,sort);
+        Page<FrontUserApplyInfo> frontUserApplyInfoPage = frontUserApplyInfoSlave.findAll(frontUserApplyInfoQuery, pageable);
+
+        List<FrontUserApplyInfo> list = frontUserApplyInfoPage == null ? Collections.emptyList() : frontUserApplyInfoPage.getContent();
+        long totalPage = frontUserApplyInfoPage == null ? 0 : frontUserApplyInfoPage.getTotalElements();
+
+        return PageDTO.getPagination(totalPage,list);
+    }
+
+    @Override
+    public PageDTO queryApplyHistory(FrontUserBO frontUserBO) {
+        Integer page = frontUserBO.getPage();
+        Integer rowNum = frontUserBO.getRowNum();
+
+        FrontUserApplyInfoQuery frontUserApplyInfoQuery = new FrontUserApplyInfoQuery();
+
+        if(!StringUtils.isEmpty(frontUserBO.getPhoneNumber())){
+            frontUserApplyInfoQuery.setPhoneNumberLike(frontUserBO.getPhoneNumber());
+        }
+
+        if(!StringUtils.isEmpty(frontUserBO.getUid())){
+            frontUserApplyInfoQuery.setUid(frontUserBO.getUid());
+        }
+        frontUserApplyInfoQuery.setCstartTime(frontUserBO.getStartTime());
+        frontUserApplyInfoQuery.setCendTime(frontUserBO.getEndTime());
+        frontUserApplyInfoQuery.setApplyStatuses(Arrays.asList(FrontUserApplyStatusEnum.REJECT.getCode(),FrontUserApplyStatusEnum.APPROVE.getCode()));
 
         //按照创建时间倒序排列
         Sort sort = new Sort(Sort.Direction.DESC,"ctime");
@@ -227,6 +258,8 @@ public class FrontUserServiceImpl implements FrontUserService {
             throw new RuntimeException("更新用户信息失败");
         }
     }
+
+
 
 
 }

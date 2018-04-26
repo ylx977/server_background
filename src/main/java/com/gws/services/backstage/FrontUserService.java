@@ -40,4 +40,11 @@ public interface FrontUserService {
      * @param frontUserBO
      */
     void updateFrontUserInfo(FrontUserBO frontUserBO);
+
+    /**
+     * 查询前台用户修改的申请过的历史记录信息
+     * @param frontUserBO
+     * @return
+     */
+    PageDTO queryApplyHistory(FrontUserBO frontUserBO);
 }

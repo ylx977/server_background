@@ -1,15 +1,15 @@
 package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.BannerDisplayOrder;
-import com.gws.controllers.BaseApiController;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
-import com.gws.controllers.api.BaseToolController;
 import com.gws.entity.backstage.BannerBO;
 import com.gws.entity.backstage.BannerVO;
 import com.gws.enums.SystemCode;
 import com.gws.services.backstage.BannerConfigService;
 import com.gws.services.backstage.BannerTableService;
+import com.gws.services.backstage.impl.UpdateBannerThread;
+import com.gws.services.oss.AliossService;
 import com.gws.utils.file.FileTransferUtil;
 import com.gws.utils.validate.ValidationUtil;
 import org.slf4j.Logger;
@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author ylx
@@ -37,11 +40,20 @@ public class BackBannerConfigController extends BaseController{
 
     private final BannerTableService bannerTableService;
 
+    private final ExecutorService executorService;
+
+    private final AliossService aliossService;
+
+    @Value("${ali.oss.bucket}")
+    public String bucket;
+
     @Autowired
-    public BackBannerConfigController(HttpServletRequest request, BannerConfigService bannerConfigService, BannerTableService bannerTableService) {
+    public BackBannerConfigController(HttpServletRequest request, BannerConfigService bannerConfigService, BannerTableService bannerTableService, ExecutorService executorService, AliossService aliossService) {
         this.request = request;
         this.bannerConfigService = bannerConfigService;
         this.bannerTableService = bannerTableService;
+        this.executorService = executorService;
+        this.aliossService = aliossService;
     }
 
     /**
@@ -103,7 +115,7 @@ public class BackBannerConfigController extends BaseController{
      * {
      *      "pics":[多个文件数组]
      *      "moveJson":[文件移动的json数据(包括新增的文件)]
-     *      "deleteJson":[文件删除的json数据]
+     *      "deleteJson":[文件删除的json数据,long类型数组]
      * }
      * @return
      */
@@ -115,14 +127,20 @@ public class BackBannerConfigController extends BaseController{
         LOGGER.info("用户:{},对后台banner进行全局设置",uid);
         try {
             if(files != null && files.length > 0){
-                FileTransferUtil.checkMultipleUploadFilesSuffixes(files,"bmp","jpg","png","tiff","gif");
+                FileTransferUtil.checkIfHasEmptyFile(files);
+                FileTransferUtil.checkMultipleUploadFilesSuffixes(files,"bmp","jpg","jpeg","png","tiff","gif");
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
         }
         try {
-            bannerTableService.updateBanner(files,moveJson,deleteJson);
+            bannerTableService.checkParameter(files,moveJson,deleteJson);
+            List<String> bannerUrls = new ArrayList<>();
+            if(files!= null && files.length > 0){
+                bannerUrls = aliossService.uploadFiles(files, bucket);
+            }
+            executorService.submit(new UpdateBannerThread(bannerUrls,moveJson,deleteJson,bannerTableService));
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());

@@ -4,6 +4,7 @@ import com.gws.common.constants.backstage.BannerDisplayOrder;
 import com.gws.controllers.BaseApiController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
+import com.gws.entity.backstage.AssetBO;
 import com.gws.entity.backstage.FrontUserBO;
 import com.gws.enums.SystemCode;
 import com.gws.services.backstage.BackAssetManagementService;
@@ -62,7 +63,6 @@ public class BackAssetManagementController extends BaseApiController{
         try {
             ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1);
             ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1);
-
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
@@ -97,14 +97,7 @@ public class BackAssetManagementController extends BaseApiController{
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},查询前台用户的充币记录",uid);
         try {
-            ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1);
-            ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1);
-            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(), 0);
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(), Integer.MAX_VALUE);
-            frontUserBO.setStartTime(startTime);
-            if(startTime > endTime){
-                frontUserBO.setEndTime(Integer.MAX_VALUE);
-            }
+            validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
@@ -112,6 +105,159 @@ public class BackAssetManagementController extends BaseApiController{
         try {
             PageDTO pageDTO = backAssetManagementService.queryFrontUserRecharge(frontUserBO);
             return success(pageDTO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+    }
+
+
+    //===================================以下是前台用户资产模块(提币记录子模块)==================================================
+
+    /**
+     * 查询前台用户提币的申请信息
+     * {
+     *     "page"
+     *     "rowNum"
+     *     "coinType"
+     *     "uid"
+     *     "personName"
+     *     "phoneNumber"
+     *     "email"
+     *     "startTime"
+     *     "endTime"
+     *
+     * }
+     * @return
+     */
+    @RequestMapping("/withdraw/queryFrontUserWithdraw")
+    public JsonResult queryFrontUserWithdraw(@RequestBody FrontUserBO frontUserBO){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},查询前台用户提币的申请信息",uid);
+        try {
+            validate(frontUserBO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+        try {
+            PageDTO pageDTO = backAssetManagementService.queryFrontUserWithdraw(frontUserBO);
+            return success(pageDTO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 查询前台用户提币的申请历史信息
+     *  {
+     *     "page"
+     *     "rowNum"
+     *     "coinType"
+     *     "uid"
+     *     "personName"
+     *     "phoneNumber"
+     *     "email"
+     *     "firstChecker"
+     *     "SecondChecker"
+     *     "startTime"
+     *     "endTime"
+     *
+     * }
+     * @return
+     */
+    @RequestMapping("/withdraw/queryFrontUserWithdrawHistory")
+    public JsonResult queryFrontUserWithdrawHistory(@RequestBody FrontUserBO frontUserBO){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},查询前台用户提币的申请历史信息",uid);
+        try {
+            validate(frontUserBO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+        try {
+            PageDTO pageDTO = backAssetManagementService.queryFrontUserWithdrawHistory(frontUserBO);
+            return success(pageDTO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 初审同意前台用户的提币申请
+     * {
+     *     "id"
+     * }
+     * @return
+     */
+    @RequestMapping("/withdraw/firstPass")
+    public JsonResult firstPass(@RequestBody FrontUserBO frontUserBO){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},初审同意前台用户的提币申请",uid);
+        try {
+            ValidationUtil.checkAndAssignLong(frontUserBO.getId());
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+        try {
+            backAssetManagementService.firstPass(frontUserBO);
+            return success(null);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 复审同意前台用户的提币申请
+     * {
+     *     "id"
+     * }
+     * @return
+     */
+    @RequestMapping("/withdraw/secondPass")
+    public JsonResult secondPass(@RequestBody FrontUserBO frontUserBO){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},复审同意前台用户的提币申请",uid);
+        try {
+            ValidationUtil.checkAndAssignLong(frontUserBO.getId());
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+        try {
+            backAssetManagementService.secondPass(frontUserBO);
+            return success(null);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+    }
+
+    /**
+     * 拒绝前台用户的提币申请
+     * {
+     *     "id"
+     * }
+     * @return
+     */
+    @RequestMapping("/withdraw/rejectWithdraw")
+    public JsonResult rejectWithdraw(@RequestBody FrontUserBO frontUserBO){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},拒绝前台用户的提币申请",uid);
+        try {
+            ValidationUtil.checkAndAssignLong(frontUserBO.getId());
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+        try {
+            backAssetManagementService.rejectWithdraw(frontUserBO);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
             return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
@@ -134,21 +280,51 @@ public class BackAssetManagementController extends BaseApiController{
     }
 
     /**
-     * 增加平台usdg总量
+     * 增加平台usdg总量（1g 黄金 = 100 USDG）
      * {
-     *     "usdg"
+     *     "gold"
      * }
      * @return
      */
     @RequestMapping("/balance/addUsdg")
-    public JsonResult addUsdg(){
+    public JsonResult addUsdg(@RequestBody AssetBO assetBO){
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},增加平台usdg总量",uid);
-
-        return null;
+        try {
+            ValidationUtil.checkMinAndAssignDouble(assetBO.getGold(),0);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+        try {
+            backAssetManagementService.addUsdg(assetBO);
+            return success(null);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
     }
 
-    //===================================以下是前台用户资产模块(提币记录子模块)==================================================
+
+
+
+
+    //===================================通用方法==================================================
+    /**
+     * 查询校验的通用方法
+     * @param frontUserBO
+     */
+    private static void validate(FrontUserBO frontUserBO){
+        ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1);
+        ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1);
+        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(), 0);
+        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(), Integer.MAX_VALUE);
+        frontUserBO.setStartTime(startTime);
+        if(startTime > endTime){
+            frontUserBO.setEndTime(Integer.MAX_VALUE);
+        }
+    }
+
 
 
 }

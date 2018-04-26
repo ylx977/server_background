@@ -9,6 +9,8 @@ import com.gws.utils.query.core.BaseQuery;
 import lombok.Data;
 
 import javax.persistence.Column;
+import javax.swing.*;
+import java.util.List;
 
 /**
  * @author ylx
@@ -29,6 +31,12 @@ public class FrontUserApplyInfoQuery extends BaseQuery{
 
     @QBindAttrField(fieldName = "phoneNumber", where = Where.like)
     private String phoneNumberLike;
+
+    @QBindAttrField(fieldName = "applyStatus", where = Where.like)
+    private Integer applyStatus;
+
+    @QBindAttrField(fieldName = "applyStatus", where = Where.in)
+    private List<Integer> applyStatuses;
 
     @QBindAttrField(fieldName = "ctime", where = Where.greaterThanOrEqualTo)
     private Integer cstartTime;

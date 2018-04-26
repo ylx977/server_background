@@ -147,6 +147,41 @@ public class BackFrontUserManagementController extends BaseApiController{
             return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
         }
     }
+    /**
+     * 查询前台修改申请信息的历史记录
+     * {
+     *     "page"
+     *     "rowNum"
+     *     "uid"
+     *     "phoneNumber"
+     *     "satrtTime"
+     *     "endTime"
+     * }
+     * @return
+     */
+    @RequestMapping("/review/queryApplyHistory")
+    public JsonResult queryApplyHistory(@RequestBody FrontUserBO frontUserBO){
+        /*
+         * 1：前台传入page,rowNum，申请时间，uid，手机，姓名，邮箱等参数
+         * 2：基本参数校验
+         * 3：查询出所有用户的修改申请信息
+         */
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},查看前台用户申请修改历史记录",uid);
+        try {
+            validate(frontUserBO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+        try {
+            PageDTO pageDTO = frontUserService.queryApplyHistory(frontUserBO);
+            return success(pageDTO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+    }
 
     /**
      * 同意用户的申请

@@ -1,6 +1,7 @@
 package com.gws.services.backstage;
 
 import com.gws.dto.backstage.PageDTO;
+import com.gws.entity.backstage.AssetBO;
 import com.gws.entity.backstage.FrontUserBO;
 
 /**
@@ -22,4 +23,42 @@ public interface BackAssetManagementService {
      * @return
      */
     PageDTO queryFrontUserRecharge(FrontUserBO frontUserBO);
+
+    /**
+     * 增加平台usdg总量
+     * @param assetBO
+     */
+    void addUsdg(AssetBO assetBO);
+
+    /**
+     * 查询前台用户提币的所有非完成的审核信息(包括初审通过和待审核的信息)
+     * @param frontUserBO
+     * @return
+     */
+    PageDTO queryFrontUserWithdraw(FrontUserBO frontUserBO);
+
+    /**
+     * 查询前台用户提币的所有已经完成的审核信息(包括复审通过和拒绝的信息)
+     * @param frontUserBO
+     * @return
+     */
+    PageDTO queryFrontUserWithdrawHistory(FrontUserBO frontUserBO);
+
+    /**
+     * 点击初审通过的按钮操作
+     * @param frontUserBO
+     */
+    void firstPass(FrontUserBO frontUserBO);
+
+    /**
+     * 点击复审通过的按钮操作
+     * @param frontUserBO
+     */
+    void secondPass(FrontUserBO frontUserBO);
+
+    /**
+     * 点击拒绝的按钮操作
+     * @param frontUserBO
+     */
+    void rejectWithdraw(FrontUserBO frontUserBO);
 }

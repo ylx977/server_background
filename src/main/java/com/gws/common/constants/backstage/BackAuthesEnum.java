@@ -37,6 +37,7 @@ public enum BackAuthesEnum {
 
     QUERY_FRONT_USERS(17L,"查询前台用户信息","/api/backstage/frontUserManagement/users/queryFrontUserInfo"),
     QUERY_FRONT_APPLY_INFO(18L,"查询前台用户修改申请","/api/backstage/frontUserManagement/review/queryApplyInfo"),
+    QUERY_FRONT_APPLY_INFO_HISTORY(30L,"查询前台用户修改历史记录","/api/backstage/frontUserManagement/review/queryApplyHistory"),
     APPROVE_FRONT_APPLY(19L,"同意前台用户修改申请","/api/backstage/frontUserManagement/review/approveApply"),
     REJECT_FRONT_APPLY(20L,"拒绝前台用户修改申请","/api/backstage/frontUserManagement/review/rejectApply"),
 
@@ -50,7 +51,12 @@ public enum BackAuthesEnum {
 
     QUERY_USER_ASSET(26L,"查询前台用户的资产","/api/backstage/assetManagement/account/queryFrontUserAccount"),
     QUERY_USER_RECHAREG(27L,"查询前台用户的充币记录","/api/backstage/assetManagement/topUp/queryFrontUserRecharge"),
-    QUERY_USER_WITHDRAW(28L,"查询前台用户的提币记录","/api/backstage/assetManagement/withdraw/queryFrontUserWithdraw"),
+    QUERY_USER_WITHDRAW(28L,"查询前台用户的提币申请","/api/backstage/assetManagement/withdraw/queryFrontUserWithdraw"),
+    FIRST_PASS_USER_WITHDRAW(29L,"初审同意前台用户的提币申请","/api/backstage/assetManagement/withdraw/firstPass"),
+    SECOND_PASS_USER_WITHDRAW(30L,"复审同意前台用户的提币申请","/api/backstage/assetManagement/withdraw/secondPass"),
+    REJECT_USER_WITHDRAW(31L,"拒绝前台用户的提币申请","/api/backstage/assetManagement/withdraw/rejectWithdraw"),
+    QUERY_USER_WITHDRAW_HISTORY(32L,"查询前台用户的充币申请记录","/api/backstage/assetManagement/withdraw/queryFrontUserWithdrawHistory"),
+    ADD_USDG(29L,"查询前台用户的提币记录","/api/backstage/assetManagement/withdraw/queryFrontUserWithdraw"),
 
 //    CONFIRM_COLEDN_CHECKOUT(22L,"确认黄金出库","/api/backstage/goldenWithdraw/confirmCheckout"),
 

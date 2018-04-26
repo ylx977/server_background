@@ -31,4 +31,12 @@ public class FrontUserBO {
 
     private Integer coinType;
 
+    private Long firstCheckUid;
+
+    private String firstCheckName;
+
+    private Long secondCheckUid;
+
+    private String secondCheckName;
+
 }
