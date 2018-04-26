@@ -61,4 +61,11 @@ public interface BackAssetManagementService {
      * @param frontUserBO
      */
     void rejectWithdraw(FrontUserBO frontUserBO);
+
+    /**
+     * 查询兑换信息
+     * @param frontUserBO
+     * @return
+     */
+    PageDTO queryExchange(FrontUserBO frontUserBO);
 }

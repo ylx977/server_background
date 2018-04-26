@@ -265,6 +265,44 @@ public class BackAssetManagementController extends BaseApiController{
     }
 
 
+    //===================================以下是前台用户资产模块(兑换/挂单子模块)==================================================
+
+
+    /**
+     * 查询平台兑换信息（也就是查询平台的即时交易信息）
+     * {
+     *     "page"
+     *     "rowNum"
+     *     "tradeType"
+     *     "uid"
+     *     "personName"
+     *     "phoneNumber"
+     *     "email"
+     *     "startTime"
+     *     "endTime"
+     * }
+     * @return
+     */
+    @RequestMapping("/exchange/queryExchange")
+    public JsonResult queryExchange(@RequestBody FrontUserBO frontUserBO){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},查询平台兑换信息",uid);
+        try {
+            validate(frontUserBO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+        try {
+            PageDTO pageDTO = backAssetManagementService.queryExchange(frontUserBO);
+            return success(pageDTO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
+    }
+
+
     //===================================以下是前台用户资产模块(资产余额子模块)==================================================
 
     /**

@@ -39,4 +39,6 @@ public class FrontUserBO {
 
     private String secondCheckName;
 
+    private Integer tradeType;
+
 }

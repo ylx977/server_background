@@ -51,10 +51,12 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
 
     private final FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave;
 
+    private final BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave;
+
     private final UserIdentitySlave userIdentitySlave;
 
     @Autowired
-    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave) {
+    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave, BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave) {
         this.frontUserSlave = frontUserSlave;
         this.frontUserAccountSlave = frontUserAccountSlave;
         this.frontUserAccountMaster = frontUserAccountMaster;
@@ -66,6 +68,7 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         this.usdgOfficialAccountSlave = usdgOfficialAccountSlave;
         this.frontUserCoinWithdrawMaster = frontUserCoinWithdrawMaster;
         this.frontUserCoinWithdrawSlave = frontUserCoinWithdrawSlave;
+        this.btyUsdgTradeOrderSlave = btyUsdgTradeOrderSlave;
     }
 
     @Override
@@ -219,9 +222,13 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         UsdgOfficialAccount usdgOfficialAccount = new UsdgOfficialAccount();
         usdgOfficialAccount.setId(1L);
         usdgOfficialAccount.setType(CoinType.USDG);
-        usdgOfficialAccount.setAddress("to be done");//TODO
-        usdgOfficialAccount.setPublicKey("to be done");//TODO
-        usdgOfficialAccount.setPrivateKey("to be done");//TODO
+
+        //TODO
+        usdgOfficialAccount.setAddress("to be done");
+        //TODO
+        usdgOfficialAccount.setPublicKey("to be done");
+        //TODO
+        usdgOfficialAccount.setPrivateKey("to be done");
         usdgOfficialAccount.setRealAmount(increasement);
         usdgOfficialAccount.setUsableAmount(increasement);
         usdgOfficialAccount.setFreezeAmount(0d);
@@ -458,5 +465,48 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         if(success2 == 0){
             throw new RuntimeException("用户账户信息更新失败");
         }
+    }
+
+    @Override
+    public PageDTO queryExchange(FrontUserBO frontUserBO) {
+        Integer page = frontUserBO.getPage();
+        Integer rowNum = frontUserBO.getRowNum();
+        Integer startTime = frontUserBO.getStartTime();
+        Integer endTime = frontUserBO.getEndTime();
+
+
+        BtyUsdgTradeOrderQuery btyUsdgTradeOrderQuery = new BtyUsdgTradeOrderQuery();
+
+        if(frontUserBO.getUid()!=null){
+            btyUsdgTradeOrderQuery.setUid(frontUserBO.getUid());
+        }
+
+        if(frontUserBO.getTradeType()!=null){
+            btyUsdgTradeOrderQuery.setTradeType(frontUserBO.getTradeType());
+        }
+
+        if(frontUserBO.getPersonName()!=null){
+            btyUsdgTradeOrderQuery.setPersonNameLike(frontUserBO.getPersonName());
+        }
+
+        if(frontUserBO.getPhoneNumber()!=null){
+            btyUsdgTradeOrderQuery.setPhoneNumberLike(frontUserBO.getPhoneNumber());
+        }
+
+        if(frontUserBO.getEmail()!=null){
+            btyUsdgTradeOrderQuery.setEmailLike(frontUserBO.getEmail());
+        }
+        btyUsdgTradeOrderQuery.setCstartTime(startTime);
+        btyUsdgTradeOrderQuery.setCendTime(endTime);
+
+        //按照创建时间倒序排列
+        Sort sort = new Sort(Sort.Direction.DESC,"ctime");
+        Pageable pageable = new PageRequest(page - 1,rowNum,sort);
+        Page<BtyUsdgTradeOrder> btyUsdgTradeOrderPage = btyUsdgTradeOrderSlave.findAll(btyUsdgTradeOrderQuery, pageable);
+
+        List<BtyUsdgTradeOrder> list = btyUsdgTradeOrderPage == null ? Collections.emptyList() : btyUsdgTradeOrderPage.getContent();
+        long totalPage = btyUsdgTradeOrderPage == null ? 0 : btyUsdgTradeOrderPage.getTotalElements();
+
+        return PageDTO.getPagination(totalPage,list);
     }
 }

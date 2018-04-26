@@ -8,7 +8,7 @@ package com.gws.enums;
  */
 public enum SystemCode implements CodeStatus {
 
-    SUCCESS("000", "成功"),
+    SUCCESS("200", "成功"),
     NEED_LOGIN("201", "未登录"),
     BAD_REQUEST("202", "参数非法"),
     NOT_IN_WHITELIST("203", "不在白名单内"),
@@ -21,7 +21,7 @@ public enum SystemCode implements CodeStatus {
     WRONG_USER_PWD("210", "用户名密码错误"),
 
     //==================以下是成功部分====================
-    SUCCESS_LOGIN("001","登录成功")
+    SUCCESS_LOGIN("200","登录成功")
 
     ;
 
