@@ -11,6 +11,9 @@ import java.util.List;
  */
 @Data
 public class BackUserBO {
+
+    private Long operatorUid;
+
     private Long uid;
 
     private List<Long> uids;

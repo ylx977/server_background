@@ -14,6 +14,7 @@ import com.gws.repositories.slave.backstage.*;
 import com.gws.services.backstage.BackUserService;
 import com.gws.utils.cache.IdGlobalGenerator;
 import com.gws.utils.redis.RedisUtil;
+import org.hibernate.internal.QueryImpl;
 import org.omg.CORBA.PRIVATE_MEMBER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -69,6 +73,9 @@ public class BackUserServiceImpl implements BackUserService {
     private final RedisTemplate<Object,Object> redisTemplate;
 
     private final RedisUtil redisUtil;
+
+    @PersistenceContext
+    private EntityManager em;
 
     @Autowired
     public BackUserServiceImpl(BackUserMaster backUserMaster, BackUserSlave backUserSlave, BackUsersAuthgroupsMaster backUsersAuthgroupsMaster,
@@ -254,11 +261,25 @@ public class BackUserServiceImpl implements BackUserService {
 
     @Override
     public PageDTO queryUserInfo(BackUserBO backUserBO) {
+
+        Long uid = backUserBO.getOperatorUid();
+
         BackUsersQuery backUsersQuery = new BackUsersQuery();
         if(!StringUtils.isEmpty(backUserBO.getUsername())){
             backUsersQuery.setUsernameLike(backUserBO.getUsername());
         }
         backUsersQuery.setIsDelete(1);
+        if(uid.equals(1L)){
+            //如果是超级管理员除了自己的信息不能看到其他人都能看到
+            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id not in (1)");
+            List<Long> resultList = (List<Long>) query.getResultList();
+            backUsersQuery.setUids(resultList);
+        }else{
+            //如果是普通管理员就不能看到自己和其它管理员的信息
+            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id not in (1,2)");
+            List<Long> resultList = (List<Long>) query.getResultList();
+            backUsersQuery.setUids(resultList);
+        }
         backUsersQuery.setCstartTime(backUserBO.getStartTime());
         backUsersQuery.setCendTime(backUserBO.getEndTime());
         //按照创建时间倒序排列
@@ -275,7 +296,23 @@ public class BackUserServiceImpl implements BackUserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteUsers(BackUserBO backUserBO) {
+        //操作人uid
+        Long operatorUid = backUserBO.getOperatorUid();
+
+        //被删除的uids
         List<Long> uids = backUserBO.getUids();
+
+        if(!operatorUid.equals(1L)){
+            //如果是超级管理员除了自己的信息不能看到其他人都能看到
+            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1,2)");
+            List<Long> resultList = (List<Long>) query.getResultList();
+            for(Long uid : resultList){
+                if(uids.contains(uid)){
+                    throw new RuntimeException("不能删除同级别的管理员用户");
+                }
+            }
+        }
+
         BackUsersQuery backUsersQuery = new BackUsersQuery();
         backUsersQuery.setUids(uids);
         System.out.println(uids);
@@ -289,8 +326,21 @@ public class BackUserServiceImpl implements BackUserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateUsers(BackUserBO backUserBO) {
+
+        //当前操作人的uid
+        Long operatorUid = backUserBO.getOperatorUid();
+
         //被修改用户的uid
         long uid = backUserBO.getUid();
+
+        if(!operatorUid.equals(1L)){
+            //如果是超级管理员除了自己的信息不能看到其他人都能看到
+            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1,2)");
+            List<Long> resultList = (List<Long>) query.getResultList();
+            if(resultList.contains(uid)){
+                throw new RuntimeException("不能修改同级别的管理员用户");
+            }
+        }
 
         BackUsersQuery backUsersQuery = new BackUsersQuery();
         backUsersQuery.setUsername(backUserBO.getUsername());
@@ -543,9 +593,23 @@ public class BackUserServiceImpl implements BackUserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void assignRoles4Account(BackUserBO backUserBO) {
-        List<Long> authgroupIds = backUserBO.getAuthgroupIds();
-        //用户的uid
+
+        //当前操作人的uid
+        Long operatorUid = backUserBO.getOperatorUid();
+
+        //被操作人的uid
         Long uid = backUserBO.getUid();
+
+        if(!operatorUid.equals(1L)){
+            //管理员同级之间不能相互修改
+            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1,2)");
+            List<Long> resultList = (List<Long>) query.getResultList();
+            if(resultList.contains(uid)){
+                throw new RuntimeException("不能分配同级别的管理员用户的角色信息");
+            }
+        }
+
+        List<Long> authgroupIds = backUserBO.getAuthgroupIds();
         BackUsersAuthgroupsQuery backUsersAuthgroupsQuery = new BackUsersAuthgroupsQuery();
         backUsersAuthgroupsQuery.setUid(uid);
         List<BackUsersAuthgroups> usersAuthgroupsInfos = backUsersAuthgroupsSlave.findAll(backUsersAuthgroupsQuery);

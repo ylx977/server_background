@@ -126,6 +126,7 @@ public class BackUserManagementController extends BaseApiController{
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
         }
         try {
+            backUserBO.setOperatorUid(uid);
             PageDTO backUserPageDTO = backUserService.queryUserInfo(backUserBO);
             return success(backUserPageDTO);
         }catch (Exception e){
@@ -163,6 +164,7 @@ public class BackUserManagementController extends BaseApiController{
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
         }
         try {
+            backUserBO.setOperatorUid(uid);
             backUserService.deleteUsers(backUserBO);
             return success(null);
         }catch (Exception e){
@@ -209,6 +211,7 @@ public class BackUserManagementController extends BaseApiController{
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
         }
         try {
+            backUserBO.setOperatorUid(uid);
             backUserService.updateUsers(backUserBO);
             return success(null);
         }catch (Exception e){
@@ -277,7 +280,7 @@ public class BackUserManagementController extends BaseApiController{
             Long beOperatedUid = ValidationUtil.checkAndAssignLong(backUserBO.getUid());
             List<Long> authgroupIds = backUserBO.getAuthgroupIds();
             if(authgroupIds.contains(1L)){
-                throw new RuntimeException("无法分配超级管理员的角色信息");
+                throw new RuntimeException("无法分配超级管理员角色");
             }
             if(beOperatedUid.equals(uid)){
                 throw new RuntimeException("无法修改自己的角色信息");
@@ -285,12 +288,18 @@ public class BackUserManagementController extends BaseApiController{
             if(beOperatedUid.equals(1L)){
                 throw new RuntimeException("无法修改超级管理员的角色信息");
             }
+            if(!uid.equals(1L)){
+                if(authgroupIds.contains(2L)){
+                    throw new RuntimeException("无权分配管理员角色");
+                }
+            }
             //还有管理员之间不能相互修改
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
         }
         try {
+            backUserBO.setOperatorUid(uid);
             backUserService.assignRoles4Account(backUserBO);
             return success(null);
         }catch (Exception e){

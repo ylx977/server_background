@@ -108,6 +108,7 @@ public class BackRoleServiceImpl implements BackRoleService {
 
     @Override
     public PageDTO queryRoles(BackUserBO backUserBO) {
+
         BackAuthgroupsQuery backAuthgroupsQuery = new BackAuthgroupsQuery();
         if(!StringUtils.isEmpty(backUserBO.getRoleName())){
             backAuthgroupsQuery.setAuthgroupNameLike(backUserBO.getRoleName());
@@ -125,6 +126,14 @@ public class BackRoleServiceImpl implements BackRoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateRole(BackUserBO backUserBO) {
+
+        BackAuthgroupsQuery backAuthgroupsQuery = new BackAuthgroupsQuery();
+        backAuthgroupsQuery.setAuthgroupName(backUserBO.getRoleName());
+        BackUsersAuthgroups one = backUsersAuthgroupsSlave.findOne(backAuthgroupsQuery);
+        if(one != null){
+            throw new RuntimeException("角色名重复了");
+        }
+
         Long roleId = backUserBO.getRoleId();
         BackAuthgroups backAuthgroups = new BackAuthgroups();
         backAuthgroups.setAuthgroupName(backUserBO.getRoleName());
