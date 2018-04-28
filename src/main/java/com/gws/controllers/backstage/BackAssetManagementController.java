@@ -5,6 +5,7 @@ import com.gws.controllers.BaseApiController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.AssetBO;
+import com.gws.entity.backstage.AssetBalanceVO;
 import com.gws.entity.backstage.FrontUserBO;
 import com.gws.enums.SystemCode;
 import com.gws.services.backstage.BackAssetManagementService;
@@ -307,18 +308,24 @@ public class BackAssetManagementController extends BaseApiController{
 
     /**
      * 查询平台的资产余额，包括bty和usdg
+     * 不用传任何参数
      * @return
      */
     @RequestMapping("/balance/queryAssetBalance")
     public JsonResult queryAssetBalance(){
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},查询平台的资产余额",uid);
-
-        return null;
+        try {
+            AssetBalanceVO assetBalanceVO = backAssetManagementService.queryAssetBalance();
+            return success(assetBalanceVO);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+        }
     }
 
     /**
-     * 增加平台usdg总量（1g 黄金 = 100 USDG）
+     * 增加平台usdg总量(同时增加平台的黄金总量，前台黄金是以kg的单位形式过来的，后台数据库以g为单位保存黄金库存量)（1g 黄金 = 100 USDG）
      * {
      *     "gold"
      * }

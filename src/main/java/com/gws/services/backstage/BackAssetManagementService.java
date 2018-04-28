@@ -2,6 +2,7 @@ package com.gws.services.backstage;
 
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.AssetBO;
+import com.gws.entity.backstage.AssetBalanceVO;
 import com.gws.entity.backstage.FrontUserBO;
 
 /**
@@ -68,4 +69,10 @@ public interface BackAssetManagementService {
      * @return
      */
     PageDTO queryExchange(FrontUserBO frontUserBO);
+
+    /**
+     * 查询平台的资产余额，包括bty和usdg
+     * @return
+     */
+    AssetBalanceVO queryAssetBalance();
 }

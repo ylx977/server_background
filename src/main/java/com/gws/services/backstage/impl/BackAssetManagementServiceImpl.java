@@ -4,10 +4,7 @@ import com.gws.common.constants.backstage.CoinType;
 import com.gws.common.constants.backstage.CoinWithdrawStatusEnum;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.*;
-import com.gws.repositories.master.backstage.FrontUserAccountMaster;
-import com.gws.repositories.master.backstage.FrontUserCoinWithdrawMaster;
-import com.gws.repositories.master.backstage.PlatformUsdgMaster;
-import com.gws.repositories.master.backstage.UsdgOfficialAccountMaster;
+import com.gws.repositories.master.backstage.*;
 import com.gws.repositories.query.backstage.*;
 import com.gws.repositories.slave.backstage.*;
 import com.gws.services.backstage.BackAssetManagementService;
@@ -21,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import java.math.RoundingMode;
 import java.util.*;
 
@@ -53,10 +53,17 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
 
     private final BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave;
 
+    private final PlatformGoldSlave platformGoldSlave;
+
+    private final PlatformGoldMaster platformGoldMaster;
+
     private final UserIdentitySlave userIdentitySlave;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Autowired
-    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave, BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave) {
+    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave, BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave, PlatformGoldSlave platformGoldSlave, PlatformGoldMaster platformGoldMaster) {
         this.frontUserSlave = frontUserSlave;
         this.frontUserAccountSlave = frontUserAccountSlave;
         this.frontUserAccountMaster = frontUserAccountMaster;
@@ -69,6 +76,8 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         this.frontUserCoinWithdrawMaster = frontUserCoinWithdrawMaster;
         this.frontUserCoinWithdrawSlave = frontUserCoinWithdrawSlave;
         this.btyUsdgTradeOrderSlave = btyUsdgTradeOrderSlave;
+        this.platformGoldSlave = platformGoldSlave;
+        this.platformGoldMaster = platformGoldMaster;
     }
 
     @Override
@@ -184,55 +193,75 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void addUsdg(AssetBO assetBO) {
+        //增加黄金的量(单位kg)
         Double gold = assetBO.getGold();
+        double goldInData = DecimalUtil.multiply(gold,1000,8, RoundingMode.HALF_EVEN);
+        //增加的usdg的量(等于黄金量*100000)，因为黄金单位是kg，1g黄金=100usdg
         double increasement = DecimalUtil.multiply(gold,100000,8, RoundingMode.HALF_EVEN);
 
-        PlatformUsdg one = platformUsdgSlave.findOne(1L);
-        if(one != null){
+        Query usdgQuery = entityManager.createNativeQuery("SELECT id,total_usdg,ctime,utime FROM platform_usdg WHERE id=1 for update",PlatformUsdg.class);
+        Query goldQuery = entityManager.createNativeQuery("SELECT id,total_gold,ctime,utime FROM platform_gold WHERE id=1 for update",PlatformGold.class);
+        List resultList1 = usdgQuery.getResultList();
+        List resultList2 = goldQuery.getResultList();
+        if(resultList1.size() != 0 && resultList2.size() != 0){
+            PlatformUsdg usdgOne = (PlatformUsdg) usdgQuery.getSingleResult();
+            PlatformGold goldOne = (PlatformGold) goldQuery.getSingleResult();
             //平台总的usdg插入数据
-            Double totalUsdg = one.getTotalUsdg();
+            Double totalUsdg = usdgOne.getTotalUsdg();
             PlatformUsdg platformUsdg = new PlatformUsdg();
-            platformUsdg.setTotalUsdg(DecimalUtil.add(gold, totalUsdg, 8, RoundingMode.HALF_EVEN));
+            platformUsdg.setTotalUsdg(DecimalUtil.add(increasement, totalUsdg, 8, RoundingMode.HALF_EVEN));
             platformUsdgMaster.updateById(platformUsdg,1L, "totalUsdg");
 
+            //平台总的黄金库表插入数据
+            Double totalGold = goldOne.getTotalGold();
+            PlatformGold platformGold = new PlatformGold();
+            platformGold.setTotalGold(DecimalUtil.add(goldInData, totalGold, 8, RoundingMode.HALF_EVEN));
+            platformGoldMaster.updateById(platformGold,1L, "totalGold");
+
             //更新平台的usdg账户中总usdg数量和可用usdg数量
-            UsdgOfficialAccountQuery usdgOfficialAccountQuery = new UsdgOfficialAccountQuery();
-            usdgOfficialAccountQuery.setType(CoinType.USDG);
-            UsdgOfficialAccount second = usdgOfficialAccountSlave.findOne(usdgOfficialAccountQuery);
-            if(second == null){
+            Query accountQuery = entityManager.createNativeQuery("SELECT id,type,name,address,publickey,privatekey,real_amount,usable_amount,freeze_amount,ctime,utime FROM usdg_official_account WHERE type="+CoinType.USDG+" FOR UPDATE ",UsdgOfficialAccount.class);
+            List<UsdgOfficialAccount> accountOnes = (List<UsdgOfficialAccount>) accountQuery.getResultList();
+            UsdgOfficialAccount accountOne = accountOnes.get(0);
+            if(accountOne == null){
                 throw new RuntimeException("平台usdg账户信息丢失");
             }
 
             UsdgOfficialAccount usdgOfficialAccount = new UsdgOfficialAccount();
-            Long id = second.getId();
-            Double realAmount = second.getRealAmount();
-            Double usableAmount = second.getUsableAmount();
+            Long id = accountOne.getId();
+            Double realAmount = accountOne.getRealAmount();
+            Double usableAmount = accountOne.getUsableAmount();
             usdgOfficialAccount.setRealAmount(DecimalUtil.add(realAmount,increasement,8,RoundingMode.HALF_EVEN));
             usdgOfficialAccount.setUsableAmount(DecimalUtil.add(usableAmount,increasement,8,RoundingMode.HALF_EVEN));
             usdgOfficialAccountMaster.updateById(usdgOfficialAccount, id,"realAmount","usableAmount");
             return;
         }
-
         //平台总的usdg插入数据
         PlatformUsdg platformUsdg = new PlatformUsdg();
         platformUsdg.setId(1L);
         platformUsdg.setTotalUsdg(increasement);
+        System.out.println(platformUsdg);
         platformUsdgMaster.save(platformUsdg);
         //平台的账户插入数据
         UsdgOfficialAccount usdgOfficialAccount = new UsdgOfficialAccount();
         usdgOfficialAccount.setId(1L);
         usdgOfficialAccount.setType(CoinType.USDG);
-
+        usdgOfficialAccount.setName("USDG");
         //TODO
-        usdgOfficialAccount.setAddress("to be done");
+        usdgOfficialAccount.setAddress("ABCDEFG");
         //TODO
-        usdgOfficialAccount.setPublicKey("to be done");
+        usdgOfficialAccount.setPublicKey("publickey1");
         //TODO
-        usdgOfficialAccount.setPrivateKey("to be done");
+        usdgOfficialAccount.setPrivateKey("privatekey1");
         usdgOfficialAccount.setRealAmount(increasement);
         usdgOfficialAccount.setUsableAmount(increasement);
         usdgOfficialAccount.setFreezeAmount(0d);
         usdgOfficialAccountMaster.save(usdgOfficialAccount);
+
+        //平台总的黄金库存表插入数据
+        PlatformGold platformGold = new PlatformGold();
+        platformGold.setId(1L);
+        platformGold.setTotalGold(DecimalUtil.multiply(gold,1000,8,RoundingMode.HALF_EVEN));
+        platformGoldMaster.save(platformGold);
     }
 
     @Override
@@ -508,5 +537,29 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         long totalPage = btyUsdgTradeOrderPage == null ? 0 : btyUsdgTradeOrderPage.getTotalElements();
 
         return PageDTO.getPagination(totalPage,list);
+    }
+
+    @Override
+    public AssetBalanceVO queryAssetBalance() {
+        AssetBalanceVO assetBalanceVO = new AssetBalanceVO();
+
+        PlatformGold platformGold = platformGoldSlave.findOne(1L);
+        PlatformUsdg platformUsdg = platformUsdgSlave.findOne(1L);
+        List<UsdgOfficialAccount> usdgOfficialAccountList = usdgOfficialAccountSlave.findAll();
+
+        assetBalanceVO.setGoldBanance(platformGold.getTotalGold());
+        assetBalanceVO.setTotalUsdgAmount(platformUsdg.getTotalUsdg());
+        for (UsdgOfficialAccount usdgOfficialAccount: usdgOfficialAccountList){
+            Integer type = usdgOfficialAccount.getType();
+            if(CoinType.USDG.equals(type)){
+                assetBalanceVO.setUsdgBalance(usdgOfficialAccount.getRealAmount());
+            }
+            if(CoinType.BTY.equals(type)){
+                assetBalanceVO.setPlatformBtyAddress(usdgOfficialAccount.getAddress());
+                assetBalanceVO.setBtyBalance(usdgOfficialAccount.getRealAmount());
+            }
+        }
+        assetBalanceVO.setMarketUsdgBalance(assetBalanceVO.getTotalUsdgAmount()-assetBalanceVO.getUsdgBalance());
+        return assetBalanceVO;
     }
 }
