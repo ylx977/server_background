@@ -59,7 +59,7 @@ public class BackAuthServiceImpl implements BackAuthService{
             }
             backAuthesQuery.setCstartTime(backUserBO.getStartTime());
             backAuthesQuery.setCendTime(backUserBO.getEndTime());
-            Sort sort = new Sort(Sort.Direction.DESC,"ctime");
+            Sort sort = new Sort(Sort.Direction.ASC,"authId");
             Pageable pageable = new PageRequest(page-1,rowNum,sort);
             Page<BackAuthes> backAuthesPage = backAuthesSlave.findAll(backAuthesQuery, pageable);
             List<BackAuthes> list = backAuthesPage == null ? Collections.EMPTY_LIST : backAuthesPage.getContent();

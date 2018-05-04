@@ -270,15 +270,23 @@ public class BackUserServiceImpl implements BackUserService {
         }
         backUsersQuery.setIsDelete(1);
         if(uid.equals(1L)){
-            //如果是超级管理员除了自己的信息不能看到其他人都能看到
-            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id not in (1)");
+            //如果是超级管理员除了自己的信息不能看到,其他人都能看到
+            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1)");
             List<Long> resultList = (List<Long>) query.getResultList();
-            backUsersQuery.setUids(resultList);
+            Query query2 = em.createNativeQuery("select uid from back_users");
+            List<Long> resultList2 = (List<Long>) query2.getResultList();
+            resultList2.removeAll(resultList);
+            backUsersQuery.setUids(resultList2);
+            System.out.println(resultList);
         }else{
             //如果是普通管理员就不能看到自己和其它管理员的信息
-            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id not in (1,2)");
+            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1,2)");
             List<Long> resultList = (List<Long>) query.getResultList();
-            backUsersQuery.setUids(resultList);
+
+            Query query2 = em.createNativeQuery("select uid from back_users");
+            List<Long> resultList2 = (List<Long>) query2.getResultList();
+            resultList2.removeAll(resultList);
+            backUsersQuery.setUids(resultList2);
         }
         backUsersQuery.setCstartTime(backUserBO.getStartTime());
         backUsersQuery.setCendTime(backUserBO.getEndTime());
@@ -334,7 +342,7 @@ public class BackUserServiceImpl implements BackUserService {
         long uid = backUserBO.getUid();
 
         if(!operatorUid.equals(1L)){
-            //如果是超级管理员除了自己的信息不能看到其他人都能看到
+            //如果是超级管理员除了自己的信息不能看到,其他人都能看到
             Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1,2)");
             List<Long> resultList = (List<Long>) query.getResultList();
             if(resultList.contains(uid)){

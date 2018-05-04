@@ -22,7 +22,10 @@ public class BackGoldenWithdarwQuery extends BaseQuery{
     private Long uid;
 
     @QBindAttrField(fieldName ="personName",where = Where.equal)
-    private Long personName;
+    private String personName;
+
+    @QBindAttrField(fieldName ="personName",where = Where.like)
+    private String personNameLike;
 
     @QBindAttrField(fieldName ="phoneNumber",where = Where.equal)
     private String phoneNumber;

@@ -32,7 +32,7 @@ public class FrontUserApplyInfoQuery extends BaseQuery{
     @QBindAttrField(fieldName = "phoneNumber", where = Where.like)
     private String phoneNumberLike;
 
-    @QBindAttrField(fieldName = "applyStatus", where = Where.like)
+    @QBindAttrField(fieldName = "applyStatus", where = Where.equal)
     private Integer applyStatus;
 
     @QBindAttrField(fieldName = "applyStatus", where = Where.in)

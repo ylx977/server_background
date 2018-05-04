@@ -65,6 +65,10 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
             backGoldenWithdarwQuery.setStatus(goldenWithdrawBO.getStatus());
         }
 
+        if(!StringUtils.isEmpty(goldenWithdrawBO.getPersonName())){
+            backGoldenWithdarwQuery.setPersonNameLike(goldenWithdrawBO.getPersonName());
+        }
+
         if(!StringUtils.isEmpty(goldenWithdrawBO.getUid())){
             backGoldenWithdarwQuery.setUid(goldenWithdrawBO.getUid());
         }

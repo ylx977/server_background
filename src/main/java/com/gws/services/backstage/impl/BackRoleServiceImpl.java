@@ -86,14 +86,15 @@ public class BackRoleServiceImpl implements BackRoleService {
      * 支持批量的用户redis缓存信息删除
      */
     private void deleteUserRredisInfo(Long... uids){
-        if(uids.length == 0){
-            throw new RuntimeException("redis删除时必须传入uid信息");
-        }
-        for(long uid : uids){
-            //去redis将用户的信息删除掉
-            redisUtil.delete(RedisConfig.USER_AUTH_PREFIX + uid);
-            redisUtil.delete(RedisConfig.USER_TOKEN_PREFIX + uid);
-            //待续.......
+        if(uids.length != 0){
+            for(long uid : uids){
+                //去redis将用户的信息删除掉
+                redisUtil.delete(RedisConfig.USER_AUTH_PREFIX + uid);
+                redisUtil.delete(RedisConfig.USER_TOKEN_PREFIX + uid);
+                //待续.......
+            }
+        }else{
+            System.out.println("不需要去redis删除用户的缓存信息");
         }
     }
 
@@ -129,7 +130,7 @@ public class BackRoleServiceImpl implements BackRoleService {
 
         BackAuthgroupsQuery backAuthgroupsQuery = new BackAuthgroupsQuery();
         backAuthgroupsQuery.setAuthgroupName(backUserBO.getRoleName());
-        BackUsersAuthgroups one = backUsersAuthgroupsSlave.findOne(backAuthgroupsQuery);
+        BackAuthgroups one = backAuthgroupsSlave.findOne(backAuthgroupsQuery);
         if(one != null){
             throw new RuntimeException("角色名重复了");
         }

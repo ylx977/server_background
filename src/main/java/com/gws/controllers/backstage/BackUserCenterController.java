@@ -39,7 +39,7 @@ public class BackUserCenterController extends BaseApiController{
     /**
      * 后台用户自己修改自己的密码
      * {
-     *     "originalPassowrd"
+     *     "originalPassword"
      *     "newPassword"
      *     "newConfirmedPassword"
      * }
