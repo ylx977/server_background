@@ -4,6 +4,7 @@ import com.gws.common.constants.backstage.BannerDisplayOrder;
 import com.gws.controllers.BaseApiController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
+import com.gws.dto.backstage.UserDetailDTO;
 import com.gws.entity.backstage.AssetBO;
 import com.gws.entity.backstage.AssetBalanceVO;
 import com.gws.entity.backstage.FrontUserBO;
@@ -197,6 +198,7 @@ public class BackAssetManagementController extends BaseApiController{
     @RequestMapping("/withdraw/firstPass")
     public JsonResult firstPass(@RequestBody FrontUserBO frontUserBO){
         Long uid = (Long) request.getAttribute("uid");
+        UserDetailDTO userDetailDTO = (UserDetailDTO) request.getAttribute("userDetailDTO");
         LOGGER.info("用户:{},初审同意前台用户的提币申请",uid);
         try {
             ValidationUtil.checkAndAssignLong(frontUserBO.getId());
@@ -205,6 +207,7 @@ public class BackAssetManagementController extends BaseApiController{
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
         }
         try {
+            frontUserBO.setUserDetailDTO(userDetailDTO);
             backAssetManagementService.firstPass(frontUserBO);
             return success(null);
         }catch (Exception e){
@@ -223,6 +226,7 @@ public class BackAssetManagementController extends BaseApiController{
     @RequestMapping("/withdraw/secondPass")
     public JsonResult secondPass(@RequestBody FrontUserBO frontUserBO){
         Long uid = (Long) request.getAttribute("uid");
+        UserDetailDTO userDetailDTO = (UserDetailDTO) request.getAttribute("userDetailDTO");
         LOGGER.info("用户:{},复审同意前台用户的提币申请",uid);
         try {
             ValidationUtil.checkAndAssignLong(frontUserBO.getId());
@@ -231,6 +235,7 @@ public class BackAssetManagementController extends BaseApiController{
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
         }
         try {
+            frontUserBO.setUserDetailDTO(userDetailDTO);
             backAssetManagementService.secondPass(frontUserBO);
             return success(null);
         }catch (Exception e){
@@ -249,6 +254,7 @@ public class BackAssetManagementController extends BaseApiController{
     @RequestMapping("/withdraw/rejectWithdraw")
     public JsonResult rejectWithdraw(@RequestBody FrontUserBO frontUserBO){
         Long uid = (Long) request.getAttribute("uid");
+        UserDetailDTO userDetailDTO = (UserDetailDTO) request.getAttribute("userDetailDTO");
         LOGGER.info("用户:{},拒绝前台用户的提币申请",uid);
         try {
             ValidationUtil.checkAndAssignLong(frontUserBO.getId());
@@ -257,6 +263,7 @@ public class BackAssetManagementController extends BaseApiController{
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
         }
         try {
+            frontUserBO.setUserDetailDTO(userDetailDTO);
             backAssetManagementService.rejectWithdraw(frontUserBO);
             return success(null);
         }catch (Exception e){

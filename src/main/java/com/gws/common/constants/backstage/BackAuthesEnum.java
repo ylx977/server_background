@@ -58,6 +58,7 @@ public enum BackAuthesEnum {
     QUERY_USER_WITHDRAW_HISTORY(32L,"查询前台用户的充币申请记录","/api/backstage/assetManagement/withdraw/queryFrontUserWithdrawHistory"),
     ADD_USDG(29L,"查询前台用户的提币记录","/api/backstage/assetManagement/balance/addUsdg"),
     QUERY_PLATFORM_ASSETS(33L,"查询平台的资产余额","/api/backstage/assetManagement/balance/queryAssetBalance"),
+    QUERY_EXCHANGE(34L,"查询平台的兑换信息","/api/backstage/assetManagement/exchange/queryExchange"),
 
 //    CONFIRM_COLEDN_CHECKOUT(22L,"确认黄金出库","/api/backstage/goldenWithdraw/confirmCheckout"),
 

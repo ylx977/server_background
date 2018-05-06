@@ -14,9 +14,9 @@ import org.springframework.stereotype.Component;
 @Configurable
 public class BackGoldenWithdrawScheduler {
 
-    @Scheduled(cron = "0 */1 * * * * ")
+    @Scheduled(cron = "0 0 0/1 * * ? ")
     public void test(){
-        System.out.println("我是springboot的定时器");
+        System.out.println("老子我1小时执行一次，哈哈");
     }
 
 }

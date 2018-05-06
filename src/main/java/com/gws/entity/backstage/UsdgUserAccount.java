@@ -32,6 +32,9 @@ public class UsdgUserAccount {
     @Column(name = "address")
     private String address;
 
+    @Column(name = "seed")
+    private String seed;
+
     @Column(name = "publickey")
     private String publicKey;
 

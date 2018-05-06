@@ -18,7 +18,7 @@ public class RedisConfig {
     /**
      * 后台用户登录时详细信息redis的过期时间
      */
-    public static final long LOGIN_USERDETAIL_TIMEOUT = 60L*2*1000;
+    public static final long LOGIN_USERDETAIL_TIMEOUT = 60L*5*1000;
 
     /**
      * 后台用户token的redis前缀
@@ -27,7 +27,7 @@ public class RedisConfig {
     /**
      * 后台用户token的redis的过期时间
      */
-    public static final long USER_TOKEN_TIMEOUT = 60L*2*1000;
+    public static final long USER_TOKEN_TIMEOUT = 60L*30*1000;
 
     /**
      * 后台用户权限校验时用户详细信息的redis的key值前缀

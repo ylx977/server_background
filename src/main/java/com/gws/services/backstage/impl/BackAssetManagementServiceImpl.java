@@ -3,6 +3,7 @@ package com.gws.services.backstage.impl;
 import com.gws.common.constants.backstage.CoinType;
 import com.gws.common.constants.backstage.CoinWithdrawStatusEnum;
 import com.gws.dto.backstage.PageDTO;
+import com.gws.dto.backstage.UserDetailDTO;
 import com.gws.entity.backstage.*;
 import com.gws.repositories.master.backstage.*;
 import com.gws.repositories.query.backstage.*;
@@ -357,6 +358,9 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void firstPass(FrontUserBO frontUserBO) {
+        //获取用户的详细信息
+        UserDetailDTO userDetailDTO = frontUserBO.getUserDetailDTO();
+
         Integer currentTime = (int)System.currentTimeMillis()/1000;
         Long id = frontUserBO.getId();
         FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
@@ -369,7 +373,9 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
         frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.FIRST_PASS.getCode());
         frontUserWithdrawApply.setUtime(currentTime);
-        int success = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime");
+        frontUserWithdrawApply.setFirstCheckUid(userDetailDTO.getUid());
+        frontUserWithdrawApply.setFirstCheckName(userDetailDTO.getPersonName());
+        int success = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime","firstCheckUid","firstCheckName");
         if(success==0){
             throw new RuntimeException("用户申请信息更新失败");
         }
@@ -378,19 +384,24 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void secondPass(FrontUserBO frontUserBO) {
+        //获取用户的详细信息
+        UserDetailDTO userDetailDTO = frontUserBO.getUserDetailDTO();
+
         Integer currentTime = (int)System.currentTimeMillis()/1000;
         Long id = frontUserBO.getId();
         FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
         if(one==null){
             throw new RuntimeException("该申请信息不存在");
         }
-        if(!one.getApplyStatus().equals(CoinWithdrawStatusEnum.TO_CHECK.getCode())){
-            throw new RuntimeException("该申请信息不为待审核状态");
+        if(!one.getApplyStatus().equals(CoinWithdrawStatusEnum.FIRST_PASS.getCode())){
+            throw new RuntimeException("该申请信息不为初审通过状态");
         }
         FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
         frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.SECOND_PASS.getCode());
         frontUserWithdrawApply.setUtime(currentTime);
-        int success = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime");
+        frontUserWithdrawApply.setSecondCheckUid(userDetailDTO.getUid());
+        frontUserWithdrawApply.setSecondCheckName(userDetailDTO.getPersonName());
+        int success = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime","secondCheckUid","secondCheckName");
         if(success==0){
             throw new RuntimeException("用户申请信息更新失败");
         }
@@ -437,7 +448,10 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rejectWithdraw(FrontUserBO frontUserBO) {
-        Integer currentTime = (int)System.currentTimeMillis()/1000;
+        //获取用户的详细信息
+        UserDetailDTO userDetailDTO = frontUserBO.getUserDetailDTO();
+
+        Integer currentTime = (int)(System.currentTimeMillis()/1000);
         Long id = frontUserBO.getId();
         FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
         if(one==null){
@@ -451,7 +465,17 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
         frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.REJECT.getCode());
         frontUserWithdrawApply.setUtime(currentTime);
-        int success1 = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime");
+        int success1 = 0;
+        if(one.getApplyStatus().equals(CoinWithdrawStatusEnum.TO_CHECK.getCode())){
+            frontUserWithdrawApply.setFirstCheckUid(userDetailDTO.getUid());
+            frontUserWithdrawApply.setFirstCheckName(userDetailDTO.getPersonName());
+            success1 = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime","firstCheckUid","firstCheckName");
+        }
+        if(one.getApplyStatus().equals(CoinWithdrawStatusEnum.FIRST_PASS.getCode())){
+            frontUserWithdrawApply.setSecondCheckUid(userDetailDTO.getUid());
+            frontUserWithdrawApply.setSecondCheckName(userDetailDTO.getPersonName());
+            success1 = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime","secondCheckUid","secondCheckName");
+        }
         if(success1 == 0){
             throw new RuntimeException("用户申请信息更新失败");
         }

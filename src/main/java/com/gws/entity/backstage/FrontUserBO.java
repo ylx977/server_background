@@ -1,5 +1,6 @@
 package com.gws.entity.backstage;
 
+import com.gws.dto.backstage.UserDetailDTO;
 import lombok.Data;
 
 /**
@@ -40,5 +41,7 @@ public class FrontUserBO {
     private String secondCheckName;
 
     private Integer tradeType;
+
+    private UserDetailDTO userDetailDTO;
 
 }

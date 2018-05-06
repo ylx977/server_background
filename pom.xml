@@ -266,7 +266,7 @@
 
 
 	<build>
-		<finalName>usdgservice</finalName>
+		<finalName>usdgBackendService</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
