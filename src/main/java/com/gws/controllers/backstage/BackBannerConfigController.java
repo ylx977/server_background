@@ -140,7 +140,7 @@ public class BackBannerConfigController extends BaseController{
             if(files!= null && files.length > 0){
                 bannerUrls = aliossService.uploadFiles(files, bucket);
             }
-            executorService.submit(new UpdateBannerThread(bannerUrls,moveJson,deleteJson,bannerTableService));
+            executorService.execute(new UpdateBannerThread(bannerUrls,moveJson,deleteJson,bannerTableService));
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
