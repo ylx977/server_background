@@ -49,4 +49,24 @@ public class BaseController {
         return new JsonResult(codeStatus, null);
     }
 
+    protected JsonResult sysError(Exception e) {
+        return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+    }
+
+    protected JsonResult valiError(Exception e) {
+        return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+    }
+
+    protected JsonResult loginSuccess(Object data){
+        return new JsonResult(SystemCode.SUCCESS_LOGIN.getCode(), SystemCode.SUCCESS_LOGIN.getMessage(),data);
+    }
+
+    protected JsonResult loginError(Exception e){
+        return new JsonResult(SystemCode.FAIL_LOGIN.getCode(), SystemCode.FAIL_LOGIN.getMessage()+":"+e.getMessage(), null);
+    }
+
+    protected JsonResult loginFail(){
+        return new JsonResult(SystemCode.WRONG_USER_PWD.getCode(), SystemCode.WRONG_USER_PWD.getMessage(), null);
+    }
+
 }

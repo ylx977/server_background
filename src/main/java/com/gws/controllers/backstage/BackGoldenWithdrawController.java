@@ -1,6 +1,7 @@
 package com.gws.controllers.backstage;
 
 import com.gws.controllers.BaseApiController;
+import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.GoldenWithdrawBO;
@@ -24,7 +25,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/backstage/goldenWithdraw")
-public class BackGoldenWithdrawController extends BaseApiController{
+public class BackGoldenWithdrawController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackGoldenWithdrawController.class);
 
@@ -72,14 +73,14 @@ public class BackGoldenWithdrawController extends BaseApiController{
             ValidationUtil.checkMinAndAssignInt(goldenWithdrawBO.getPage(),1);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backGoldenWithdrawService.queryGoldenWithdrawInfo(goldenWithdrawBO);
             return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -114,14 +115,14 @@ public class BackGoldenWithdrawController extends BaseApiController{
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             backGoldenWithdrawService.insertGoldenCode(goldenWithdrawBO);
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 

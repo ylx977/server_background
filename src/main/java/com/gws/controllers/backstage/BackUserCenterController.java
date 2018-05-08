@@ -2,6 +2,7 @@ package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.RegexConstant;
 import com.gws.controllers.BaseApiController;
+import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.UserDetailDTO;
 import com.gws.entity.backstage.BackUserBO;
@@ -23,7 +24,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 @RestController
 @RequestMapping("/api/backstage/userCenter")
-public class BackUserCenterController extends BaseApiController{
+public class BackUserCenterController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackUserCenterController.class);
 
@@ -72,14 +73,14 @@ public class BackUserCenterController extends BaseApiController{
             backUserBO.setUid(uid);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             backUserService.modifyPassword(backUserBO);
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 

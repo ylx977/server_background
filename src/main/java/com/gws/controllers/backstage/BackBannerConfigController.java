@@ -69,7 +69,7 @@ public class BackBannerConfigController extends BaseController{
             return success(bannerVO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -99,14 +99,14 @@ public class BackBannerConfigController extends BaseController{
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             bannerConfigService.basicBannerConfig(bannerBO);
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -132,7 +132,7 @@ public class BackBannerConfigController extends BaseController{
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             bannerTableService.checkParameter(files,moveJson,deleteJson);
@@ -144,7 +144,7 @@ public class BackBannerConfigController extends BaseController{
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 

@@ -2,6 +2,7 @@ package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.BannerDisplayOrder;
 import com.gws.controllers.BaseApiController;
+import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.dto.backstage.UserDetailDTO;
@@ -26,7 +27,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 @RestController
 @RequestMapping("/api/backstage/assetManagement")
-public class BackAssetManagementController extends BaseApiController{
+public class BackAssetManagementController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackAssetManagementController.class);
 
@@ -67,14 +68,14 @@ public class BackAssetManagementController extends BaseApiController{
             ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryFrontUserAccount(frontUserBO);
             return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -102,14 +103,14 @@ public class BackAssetManagementController extends BaseApiController{
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryFrontUserRecharge(frontUserBO);
             return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -140,14 +141,14 @@ public class BackAssetManagementController extends BaseApiController{
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryFrontUserWithdraw(frontUserBO);
             return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -177,14 +178,14 @@ public class BackAssetManagementController extends BaseApiController{
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryFrontUserWithdrawHistory(frontUserBO);
             return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -204,7 +205,7 @@ public class BackAssetManagementController extends BaseApiController{
             ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             frontUserBO.setUserDetailDTO(userDetailDTO);
@@ -212,7 +213,7 @@ public class BackAssetManagementController extends BaseApiController{
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -232,7 +233,7 @@ public class BackAssetManagementController extends BaseApiController{
             ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             frontUserBO.setUserDetailDTO(userDetailDTO);
@@ -240,7 +241,7 @@ public class BackAssetManagementController extends BaseApiController{
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -260,7 +261,7 @@ public class BackAssetManagementController extends BaseApiController{
             ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             frontUserBO.setUserDetailDTO(userDetailDTO);
@@ -268,7 +269,7 @@ public class BackAssetManagementController extends BaseApiController{
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -299,14 +300,14 @@ public class BackAssetManagementController extends BaseApiController{
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryExchange(frontUserBO);
             return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -327,7 +328,7 @@ public class BackAssetManagementController extends BaseApiController{
             return success(assetBalanceVO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -346,14 +347,14 @@ public class BackAssetManagementController extends BaseApiController{
             ValidationUtil.checkMinAndAssignDouble(assetBO.getGold(),0);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             backAssetManagementService.addUsdg(assetBO);
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 

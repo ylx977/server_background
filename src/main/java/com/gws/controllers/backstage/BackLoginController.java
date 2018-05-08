@@ -3,6 +3,7 @@ package com.gws.controllers.backstage;
 import com.alibaba.fastjson.JSON;
 import com.gws.common.constants.backstage.RedisConfig;
 import com.gws.common.constants.backstage.RegexConstant;
+import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.UserDetailDTO;
 import com.gws.entity.backstage.BackUser;
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  */
 @RestController
 @RequestMapping("/api/backstage")
-public class BackLoginController {
+public class BackLoginController extends BaseController{
 
     @Autowired
     private BackUserService backUserService;
@@ -54,7 +55,7 @@ public class BackLoginController {
             ValidationUtil.checkBlankAndAssignString(password,RegexConstant.PWD_REGEX);
         } catch (Exception e) {
             LOGGER.error("用户名:{},登录校验异常:{}",username,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
 
         //redis中key的值
@@ -68,7 +69,7 @@ public class BackLoginController {
                 LOGGER.warn("平台初始化，创建超级管理员:{}",username);
                 //创建超级管理员,和管理员,插入token,上区块链
                 UserDetailDTO userDetailDTO = backUserService.createAdmin(username,password,token);
-                return new JsonResult(SystemCode.SUCCESS_LOGIN.getCode(), SystemCode.SUCCESS_LOGIN.getMessage(),userDetailDTO);
+                return loginSuccess(userDetailDTO);
             }
 
             UserDetailDTO userDetailDTO;
@@ -83,7 +84,7 @@ public class BackLoginController {
                 //用户名密码错误
                 if(userDetailDTO==null){
                     LOGGER.error("用户名:{} 输入错误的账户名或密码",username);
-                    return new JsonResult(SystemCode.WRONG_USER_PWD.getCode(), SystemCode.WRONG_USER_PWD.getMessage(), null);
+                    return loginFail();
                 }
 
                 //只是将用户名用户密码等详细信息先存入redis
@@ -109,10 +110,10 @@ public class BackLoginController {
             //将token信息更新到redis
             redisUtil.set(RedisConfig.USER_TOKEN_PREFIX+uid, token,RedisConfig.USER_TOKEN_TIMEOUT, TimeUnit.MILLISECONDS);
 
-            return new JsonResult(SystemCode.SUCCESS_LOGIN.getCode(), SystemCode.SUCCESS_LOGIN.getMessage(), userDetailDTO);
+            return loginSuccess(userDetailDTO);
         }catch (Exception e){
             LOGGER.error("用户名:{},登录异常详情:{}",username,e.getMessage());
-            return new JsonResult(SystemCode.FAIL_LOGIN.getCode(), SystemCode.FAIL_LOGIN.getMessage()+":"+e.getMessage(), null);
+            return loginError(e);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.gws.controllers.backstage;
 
 import com.gws.controllers.BaseApiController;
+import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.MarketPriceBO;
@@ -22,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 @RestController
 @RequestMapping("/api/backstage/marketPrice")
-public class BackMarketPriceController extends BaseApiController{
+public class BackMarketPriceController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackMarketPriceController.class);
 
@@ -60,14 +61,14 @@ public class BackMarketPriceController extends BaseApiController{
             ValidationUtil.checkAndAssignDouble(marketPriceBO.getSellSpread());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             backMarketPriceService.updatePrice(marketPriceBO);
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 

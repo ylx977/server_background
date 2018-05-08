@@ -2,6 +2,7 @@ package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.RegexConstant;
 import com.gws.controllers.BaseApiController;
+import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.FrontUserBO;
@@ -23,7 +24,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 @RestController
 @RequestMapping("/api/backstage/frontUserManagement")
-public class BackFrontUserManagementController extends BaseApiController{
+public class BackFrontUserManagementController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackFrontUserManagementController.class);
 
@@ -65,14 +66,14 @@ public class BackFrontUserManagementController extends BaseApiController{
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = frontUserService.queryFrontUsers(frontUserBO);
             return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -99,14 +100,14 @@ public class BackFrontUserManagementController extends BaseApiController{
             ValidationUtil.checkAndAssignLong(frontUserBO.getUid());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             frontUserService.updateFrontUserInfo(frontUserBO);
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
 
     }
@@ -137,14 +138,14 @@ public class BackFrontUserManagementController extends BaseApiController{
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = frontUserService.queryApplyInfo(frontUserBO);
             return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
     /**
@@ -172,14 +173,14 @@ public class BackFrontUserManagementController extends BaseApiController{
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = frontUserService.queryApplyHistory(frontUserBO);
             return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -205,14 +206,14 @@ public class BackFrontUserManagementController extends BaseApiController{
             ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             frontUserService.approveApply(frontUserBO);
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -237,14 +238,14 @@ public class BackFrontUserManagementController extends BaseApiController{
             ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
+            return valiError(e);
         }
         try {
             frontUserService.rejectApply(frontUserBO);
             return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
+            return sysError(e);
         }
     }
 
@@ -253,14 +254,14 @@ public class BackFrontUserManagementController extends BaseApiController{
      * @param frontUserBO
      */
     private static final void validate(FrontUserBO frontUserBO){
-            ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1);
-            ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1);
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(),Integer.MAX_VALUE);
-            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(),0);
-            if(startTime > endTime){
-                frontUserBO.setEndTime(Integer.MAX_VALUE);
-            }else{
-                frontUserBO.setEndTime(endTime);
+        ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1);
+        ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1);
+        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(),Integer.MAX_VALUE);
+        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(),0);
+        if(startTime > endTime){
+            frontUserBO.setEndTime(Integer.MAX_VALUE);
+        }else{
+            frontUserBO.setEndTime(endTime);
         }
     }
 

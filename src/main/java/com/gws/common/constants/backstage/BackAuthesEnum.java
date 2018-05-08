@@ -60,6 +60,16 @@ public enum BackAuthesEnum {
     QUERY_PLATFORM_ASSETS(33L,"查询平台的资产余额","/api/backstage/assetManagement/balance/queryAssetBalance"),
     QUERY_EXCHANGE(34L,"查询平台的兑换信息","/api/backstage/assetManagement/exchange/queryExchange"),
 
+
+    QUERY_FEEDBACK(35L,"查询前台用户反馈信息","/api/backstage/feedback/queryFeedbacks"),
+
+    QUERY_NOTICES(36L,"查询公告信息","/api/backstage/notice/queryNotices"),
+    QUERY_NOTICE_CONTENT(37L,"查询公告内容","/api/backstage/notice/queryNoticeContent"),
+    UPDATE_NOTICE_CONTENT(38L,"修改公告内容","/api/backstage/notice/updateNotice"),
+    DELETE_NOTICE(39L,"删除公告","/api/backstage/notice/deleteNotice"),
+    PUBLISH_NOTICE(40L,"新建公告","/api/backstage/notice/publishNotice"),
+    UPDATE_NOTICE_STATUS(41L,"修改公告状态","/api/backstage/notice/updateNoticeStatus"),
+
 //    CONFIRM_COLEDN_CHECKOUT(22L,"确认黄金出库","/api/backstage/goldenWithdraw/confirmCheckout"),
 
 
