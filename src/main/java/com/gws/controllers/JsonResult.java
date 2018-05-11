@@ -21,13 +21,13 @@ public class JsonResult {
     public JsonResult(CodeStatus codeStatus) {
 
         this.code = codeStatus.getCode();
-        this.message = codeStatus.getMessage();
+        this.message = codeStatus.getMessageCN();
     }
 
 
     public JsonResult(CodeStatus codeStatus, Object data) {
         this.code = codeStatus.getCode();
-        this.message = codeStatus.getMessage();
+        this.message = codeStatus.getMessageCN();
         this.data = data;
     }
 

@@ -59,6 +59,11 @@ public enum BackAuthesEnum {
     ADD_USDG(29L,"查询前台用户的提币记录","/api/backstage/assetManagement/balance/addUsdg"),
     QUERY_PLATFORM_ASSETS(33L,"查询平台的资产余额","/api/backstage/assetManagement/balance/queryAssetBalance"),
     QUERY_EXCHANGE(34L,"查询平台的兑换信息","/api/backstage/assetManagement/exchange/queryExchange"),
+    QUERY_PLATFORM_ADDRESS(34L,"点击充币查询平台的币地址","/api/backstage/assetManagement/balance/queryPlatformAddress"),
+    QUERY_PLATFORM_MANAGED_ADDRESSES(35L,"点击地址管理查询所有地址","/api/backstage/assetManagement/balance/queryAddresses"),
+    DELETE_MANAGED_ADDRESSES(35L,"删除管理地址","/api/backstage/assetManagement/balance/deleteAddress"),
+    ADD_MANAGED_ADDRESSES(35L,"添加管理地址","/api/backstage/assetManagement/balance/addAddress"),
+    SET_DEFAULT_MANAGED_ADDRESSES(35L,"设置管理的默认地址","/api/backstage/assetManagement/balance/setDefaultAddress"),
 
 
     QUERY_FEEDBACK(35L,"查询前台用户反馈信息","/api/backstage/feedback/queryFeedbacks"),

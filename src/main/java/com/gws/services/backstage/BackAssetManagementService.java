@@ -3,7 +3,10 @@ package com.gws.services.backstage;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.AssetBO;
 import com.gws.entity.backstage.AssetBalanceVO;
+import com.gws.entity.backstage.BtyAddresses;
 import com.gws.entity.backstage.FrontUserBO;
+
+import java.util.List;
 
 /**
  * @author ylx
@@ -75,4 +78,28 @@ public interface BackAssetManagementService {
      * @return
      */
     AssetBalanceVO queryAssetBalance();
+
+    /**
+     * 查询平台向外提币的所有地址信息
+     * @return
+     */
+    List<BtyAddresses> queryAddresses();
+
+    /**
+     * 根据id删除管理的一个地址
+     * @param assetBO
+     */
+    void deleteAddresses(AssetBO assetBO);
+
+    /**
+     * 添加管理的地址
+     * @param assetBO
+     */
+    void addAddresses(AssetBO assetBO);
+
+    /**
+     * 设置管理的默认地址
+     * @param assetBO
+     */
+    void setDefaultAddress(AssetBO assetBO);
 }

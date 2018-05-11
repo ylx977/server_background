@@ -52,4 +52,6 @@ public class NoticeBO {
      */
     private Integer status;
 
+    private Integer lang;
+
 }

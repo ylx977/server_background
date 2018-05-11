@@ -43,4 +43,6 @@ public class GoldenWithdrawBO {
 
     private Integer endTime;
 
+    private Integer lang;
+
 }

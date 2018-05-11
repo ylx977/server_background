@@ -1,6 +1,7 @@
 package com.gws.interceptor.backstage;
 
 import com.alibaba.fastjson.JSON;
+import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.UserDetailDTO;
 import com.gws.enums.SystemCode;
@@ -32,7 +33,8 @@ public class AuthorityInterceptor extends HandlerInterceptorAdapter {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String tokenAndUserId = request.getHeader("Authorization");
-        Long uid = ValidationUtil.checkAndAssignLong(tokenAndUserId.split("&")[1]);
+        Integer lang = ValidationUtil.getInteger(request.getHeader("lang"),1);
+        Long uid = ValidationUtil.checkAndAssignLong(tokenAndUserId.split("&")[1],lang);
         try {
             LOGGER.info("对用户:{},权限进行校验",uid);
             //uri对应的形式是/api/backstage/userManagement/users/createUser（也就是authUrl）
@@ -47,7 +49,7 @@ public class AuthorityInterceptor extends HandlerInterceptorAdapter {
         } catch (Exception e) {
             LOGGER.error("用户:{},无权操作:{}",uid,e.getMessage());
             PrintWriter writer = response.getWriter();
-            JsonResult jsonResult = new JsonResult(SystemCode.NOT_AUTH.getCode(),SystemCode.NOT_AUTH.getMessage()+":"+e.getMessage(),null);
+            JsonResult jsonResult = BaseController.authError(e,lang);
             response.setContentType("application/json");
             writer.append(JSON.toJSONString(jsonResult));
             return false;

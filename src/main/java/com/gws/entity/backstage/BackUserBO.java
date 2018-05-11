@@ -58,4 +58,6 @@ public class BackUserBO {
 
     private String newConfirmedPassword;
 
+    private Integer lang;
+
 }

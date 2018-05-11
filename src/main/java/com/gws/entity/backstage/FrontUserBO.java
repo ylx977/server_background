@@ -44,4 +44,6 @@ public class FrontUserBO {
 
     private UserDetailDTO userDetailDTO;
 
+    private Integer lang;
+
 }

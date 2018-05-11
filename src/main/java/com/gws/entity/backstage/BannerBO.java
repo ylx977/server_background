@@ -20,4 +20,7 @@ public class BannerBO {
     private Integer displayInterval;
 
 
+    private Integer lang;
+
+
 }

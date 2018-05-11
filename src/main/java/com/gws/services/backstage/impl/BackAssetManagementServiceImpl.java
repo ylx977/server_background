@@ -9,6 +9,7 @@ import com.gws.repositories.master.backstage.*;
 import com.gws.repositories.query.backstage.*;
 import com.gws.repositories.slave.backstage.*;
 import com.gws.services.backstage.BackAssetManagementService;
+import com.gws.utils.cache.IdGlobalGenerator;
 import com.gws.utils.decimal.DecimalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -60,11 +61,17 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
 
     private final UserIdentitySlave userIdentitySlave;
 
+    private final BtyAddressesSlave btyAddressesSlave;
+
+    private final BtyAddressesMaster btyAddressesMaster;
+
+    private final IdGlobalGenerator idGlobalGenerator;
+
     @PersistenceContext
     private EntityManager entityManager;
 
     @Autowired
-    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave, BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave, PlatformGoldSlave platformGoldSlave, PlatformGoldMaster platformGoldMaster) {
+    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave, BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave, PlatformGoldSlave platformGoldSlave, PlatformGoldMaster platformGoldMaster, BtyAddressesSlave btyAddressesSlave, BtyAddressesMaster btyAddressesMaster, IdGlobalGenerator idGlobalGenerator) {
         this.frontUserSlave = frontUserSlave;
         this.frontUserAccountSlave = frontUserAccountSlave;
         this.frontUserAccountMaster = frontUserAccountMaster;
@@ -79,6 +86,9 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         this.btyUsdgTradeOrderSlave = btyUsdgTradeOrderSlave;
         this.platformGoldSlave = platformGoldSlave;
         this.platformGoldMaster = platformGoldMaster;
+        this.btyAddressesSlave = btyAddressesSlave;
+        this.btyAddressesMaster = btyAddressesMaster;
+        this.idGlobalGenerator = idGlobalGenerator;
     }
 
     @Override
@@ -585,5 +595,48 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         }
         assetBalanceVO.setMarketUsdgBalance(assetBalanceVO.getTotalUsdgAmount()-assetBalanceVO.getUsdgBalance());
         return assetBalanceVO;
+    }
+
+    @Override
+    public List<BtyAddresses> queryAddresses() {
+        List<BtyAddresses> all = btyAddressesSlave.findAll();
+        return all;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteAddresses(AssetBO assetBO) {
+        Long id = assetBO.getId();
+        btyAddressesMaster.delete(id);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addAddresses(AssetBO assetBO) {
+        BtyAddresses btyAddresses = new BtyAddresses();
+        btyAddresses.setId(idGlobalGenerator.getSeqId(BtyAddresses.class));
+        btyAddresses.setAddress(assetBO.getAddress());
+        btyAddresses.setTag(assetBO.getTag());
+        btyAddresses.setIsDefault(0);
+        btyAddressesMaster.save(btyAddresses);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setDefaultAddress(AssetBO assetBO) {
+        List<BtyAddresses> all = btyAddressesSlave.findAll();
+        for (BtyAddresses btyAddresses : all) {
+            Integer isDefault = btyAddresses.getIsDefault();
+            Long id = btyAddresses.getId();
+            if(isDefault == 1){
+                BtyAddresses addresses = new BtyAddresses();
+                addresses.setIsDefault(0);
+                btyAddressesMaster.updateById(addresses,id,"isDefault");
+            }
+        }
+        Long targetId = assetBO.getId();
+        BtyAddresses addresses = new BtyAddresses();
+        addresses.setIsDefault(1);
+        btyAddressesMaster.updateById(addresses,targetId,"isDefault");
     }
 }

@@ -10,5 +10,7 @@ public interface CodeStatus {
 
     String getCode();
 
-    String getMessage();
+    String getMessageCN();
+
+    String getMessageEN();
 }

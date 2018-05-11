@@ -55,20 +55,22 @@ public class BackMarketPriceController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},更新平台人民币对新元价格",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        marketPriceBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignDouble(marketPriceBO.getCnysgd());
-            ValidationUtil.checkAndAssignDouble(marketPriceBO.getBuySpread());
-            ValidationUtil.checkAndAssignDouble(marketPriceBO.getSellSpread());
+            ValidationUtil.checkAndAssignDouble(marketPriceBO.getCnysgd(),lang);
+            ValidationUtil.checkAndAssignDouble(marketPriceBO.getBuySpread(),lang);
+            ValidationUtil.checkAndAssignDouble(marketPriceBO.getSellSpread(),lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backMarketPriceService.updatePrice(marketPriceBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 

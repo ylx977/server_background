@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,9 @@ public class BackLoginController extends BaseController{
 
     @Autowired
     private BackUserService backUserService;
+
+    @Autowired
+    private HttpServletRequest request;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -49,13 +53,15 @@ public class BackLoginController extends BaseController{
         String username = backUserBO.getUsername();
         String password = backUserBO.getPassword();
         LOGGER.info("用户名:{} 进行了登录",username);
+        Integer lang = ValidationUtil.getInteger(request.getHeader("lang"),1);
+        backUserBO.setLang(lang);
         try {
             //先进行用户名和密码的校验
-            ValidationUtil.checkBlankAndAssignString(username, RegexConstant.USERNAME_REGEX);
-            ValidationUtil.checkBlankAndAssignString(password,RegexConstant.PWD_REGEX);
+            ValidationUtil.checkBlankAndAssignString(username,lang,RegexConstant.USERNAME_REGEX);
+            ValidationUtil.checkBlankAndAssignString(password,lang,RegexConstant.PWD_REGEX);
         } catch (Exception e) {
             LOGGER.error("用户名:{},登录校验异常:{}",username,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
 
         //redis中key的值
@@ -69,7 +75,7 @@ public class BackLoginController extends BaseController{
                 LOGGER.warn("平台初始化，创建超级管理员:{}",username);
                 //创建超级管理员,和管理员,插入token,上区块链
                 UserDetailDTO userDetailDTO = backUserService.createAdmin(username,password,token);
-                return loginSuccess(userDetailDTO);
+                return loginSuccess(userDetailDTO,lang);
             }
 
             UserDetailDTO userDetailDTO;
@@ -84,7 +90,7 @@ public class BackLoginController extends BaseController{
                 //用户名密码错误
                 if(userDetailDTO==null){
                     LOGGER.error("用户名:{} 输入错误的账户名或密码",username);
-                    return loginFail();
+                    return loginFail(lang);
                 }
 
                 //只是将用户名用户密码等详细信息先存入redis
@@ -110,10 +116,10 @@ public class BackLoginController extends BaseController{
             //将token信息更新到redis
             redisUtil.set(RedisConfig.USER_TOKEN_PREFIX+uid, token,RedisConfig.USER_TOKEN_TIMEOUT, TimeUnit.MILLISECONDS);
 
-            return loginSuccess(userDetailDTO);
+            return loginSuccess(userDetailDTO,lang);
         }catch (Exception e){
             LOGGER.error("用户名:{},登录异常详情:{}",username,e.getMessage());
-            return loginError(e);
+            return loginError(e,lang);
         }
     }
 

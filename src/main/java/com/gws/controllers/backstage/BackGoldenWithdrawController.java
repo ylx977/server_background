@@ -1,11 +1,13 @@
 package com.gws.controllers.backstage;
 
+import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.controllers.BaseApiController;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.GoldenWithdrawBO;
 import com.gws.enums.SystemCode;
+import com.gws.exception.ExceptionUtils;
 import com.gws.services.backstage.BackGoldenWithdrawService;
 import com.gws.utils.validate.ValidationUtil;
 import org.slf4j.Logger;
@@ -61,26 +63,28 @@ public class BackGoldenWithdrawController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},后台用户查看黄金提取记录",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        goldenWithdrawBO.setLang(lang);
         try {
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getEndTime(),Integer.MAX_VALUE);
-            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getStartTime(),0);
+            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getEndTime(),Integer.MAX_VALUE,lang);
+            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getStartTime(),lang,0);
             if(startTime > endTime){
                 goldenWithdrawBO.setEndTime(Integer.MAX_VALUE);
             }else{
                 goldenWithdrawBO.setEndTime(endTime);
             }
-            ValidationUtil.checkMinAndAssignInt(goldenWithdrawBO.getRowNum(),1);
-            ValidationUtil.checkMinAndAssignInt(goldenWithdrawBO.getPage(),1);
+            ValidationUtil.checkMinAndAssignInt(goldenWithdrawBO.getRowNum(),1,lang);
+            ValidationUtil.checkMinAndAssignInt(goldenWithdrawBO.getPage(),1,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             PageDTO pageDTO = backGoldenWithdrawService.queryGoldenWithdrawInfo(goldenWithdrawBO);
-            return success(pageDTO);
+            return success(pageDTO,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -104,25 +108,27 @@ public class BackGoldenWithdrawController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},录入黄金编号",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        goldenWithdrawBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(goldenWithdrawBO.getId());
+            ValidationUtil.checkAndAssignLong(goldenWithdrawBO.getId(),lang);
             List<String> goldenCodes = goldenWithdrawBO.getGoldenCodes();
             if(goldenCodes.size() == 0){
-                throw new RuntimeException("请输入黄金编号");
+                ExceptionUtils.throwException(ErrorMsg.INPUT_GOLD_CODE,lang);
             }
             for (String goldenCode : goldenCodes) {
-                ValidationUtil.checkBlankAndAssignString(goldenCode);
+                ValidationUtil.checkBlankAndAssignString(goldenCode,lang);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backGoldenWithdrawService.insertGoldenCode(goldenWithdrawBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 

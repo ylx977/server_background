@@ -16,7 +16,4 @@ public class ProtobufBean {
         this.instructionId = instructionId;
         this.signature = signature;
     }
-
-    public ProtobufBean() {
-    }
 }

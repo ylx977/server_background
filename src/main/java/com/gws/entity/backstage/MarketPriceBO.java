@@ -24,4 +24,6 @@ public class MarketPriceBO {
      */
     private Double sellSpread;
 
+    private Integer lang;
+
 }

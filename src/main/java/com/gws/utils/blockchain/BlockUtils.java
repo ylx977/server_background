@@ -39,7 +39,8 @@ public class BlockUtils {
         String deliver_tx = resultMap.get("deliver_tx").toString();
         Map<String, Object> deliver_txMap = JSON.parseObject(deliver_tx, Map.class);
         String code2 = deliver_txMap.get("code").toString();
-        if (("0".equals(code1)) && ("0".equals(code2))) {    //两个都等于0才等于成功
+        //两个都等于0才等于成功
+        if (("0".equals(code1)) && ("0".equals(code2))) {
             flag = true;
         }
         return flag;

@@ -11,4 +11,14 @@ public class AssetBO {
 
     private Double gold;
 
+    private Long id;
+
+    private String address;
+
+    private String tag;
+
+    private String isDelete;
+
+    private Integer lang;
+
 }

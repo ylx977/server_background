@@ -61,15 +61,17 @@ public class BackBannerConfigController extends BaseController{
      * @return
      */
     @RequestMapping(value = "/queryBanners",method = RequestMethod.POST)
-    public JsonResult queryBanners(){
+    public JsonResult queryBanners(@RequestBody BannerBO bannerBO){
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},修改后台banner基本配置信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        bannerBO.setLang(lang);
         try {
             BannerVO bannerVO = bannerConfigService.queryBanners();
-            return success(bannerVO);
+            return success(bannerVO,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -87,26 +89,28 @@ public class BackBannerConfigController extends BaseController{
     public JsonResult basicBannerConfig(@RequestBody BannerBO bannerBO){
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},修改后台banner基本配置信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        bannerBO.setLang(lang);
         try {
             Integer displayOrder = bannerBO.getDisplayOrder();
             Integer displayInterval = bannerBO.getDisplayInterval();
             if(null != displayOrder){
-                ValidationUtil.checkRangeAndAssignInt(displayOrder, BannerDisplayOrder.LEFT_TO_RIGHT,BannerDisplayOrder.RIGHT_TO_LEFT);
+                ValidationUtil.checkRangeAndAssignInt(displayOrder, BannerDisplayOrder.LEFT_TO_RIGHT,BannerDisplayOrder.RIGHT_TO_LEFT,lang);
             }
             if(null != displayInterval){
                 //不能小于1
-                ValidationUtil.checkMinAndAssignInt(displayInterval,1);
+                ValidationUtil.checkMinAndAssignInt(displayInterval,1,lang);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             bannerConfigService.basicBannerConfig(bannerBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -125,6 +129,7 @@ public class BackBannerConfigController extends BaseController{
                                     @RequestParam(value = "deleteJson",required = false) String deleteJson){
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},对后台banner进行全局设置",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
         try {
             if(files != null && files.length > 0){
                 FileTransferUtil.checkIfHasEmptyFile(files);
@@ -132,7 +137,7 @@ public class BackBannerConfigController extends BaseController{
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             bannerTableService.checkParameter(files,moveJson,deleteJson);
@@ -141,10 +146,10 @@ public class BackBannerConfigController extends BaseController{
                 bannerUrls = aliossService.uploadFiles(files, bucket);
             }
             executorService.execute(new UpdateBannerThread(bannerUrls,moveJson,deleteJson,bannerTableService));
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 

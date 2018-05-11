@@ -1,6 +1,7 @@
 package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.BackAuthesEnum;
+import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.common.constants.backstage.RegexConstant;
 import com.gws.common.constants.backstage.Roles;
 import com.gws.controllers.BaseApiController;
@@ -12,6 +13,7 @@ import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.BackUser;
 import com.gws.entity.backstage.BackUserBO;
 import com.gws.enums.SystemCode;
+import com.gws.exception.ExceptionUtils;
 import com.gws.services.backstage.BackAuthService;
 import com.gws.services.backstage.BackRoleService;
 import com.gws.services.backstage.BackUserService;
@@ -73,21 +75,23 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},创建后台用户",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            ValidationUtil.checkBlankAndAssignString(backUserBO.getUsername(), RegexConstant.USERNAME_REGEX);
-            ValidationUtil.checkBlankAndAssignString(backUserBO.getPassword(),RegexConstant.PWD_REGEX);
-            ValidationUtil.checkBlankAndAssignString(backUserBO.getContact());
-            ValidationUtil.checkBlankAndAssignString(backUserBO.getPersonName(),RegexConstant.NAME_REGEX);
+            ValidationUtil.checkBlankAndAssignString(backUserBO.getUsername(),lang,RegexConstant.USERNAME_REGEX);
+            ValidationUtil.checkBlankAndAssignString(backUserBO.getPassword(),lang,RegexConstant.PWD_REGEX);
+            ValidationUtil.checkBlankAndAssignString(backUserBO.getContact(),lang);
+            ValidationUtil.checkBlankAndAssignString(backUserBO.getPersonName(),lang,RegexConstant.NAME_REGEX);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backUserService.saveUser(backUserBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -112,11 +116,13 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},查询后台用户",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            ValidationUtil.checkMinAndAssignInt(backUserBO.getPage(),1);
-            ValidationUtil.checkMinAndAssignInt(backUserBO.getRowNum(),1);
-            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getStartTime(),0);
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),Integer.MAX_VALUE);
+            ValidationUtil.checkMinAndAssignInt(backUserBO.getPage(),1,lang);
+            ValidationUtil.checkMinAndAssignInt(backUserBO.getRowNum(),1,lang);
+            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getStartTime(),lang,0);
+            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),Integer.MAX_VALUE,lang);
             if(startTime > endTime){
                 backUserBO.setEndTime(Integer.MAX_VALUE);
             }else{
@@ -124,15 +130,15 @@ public class BackUserManagementController extends BaseController{
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backUserBO.setOperatorUid(uid);
             PageDTO backUserPageDTO = backUserService.queryUserInfo(backUserBO);
-            return success(backUserPageDTO);
+            return success(backUserPageDTO,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -152,25 +158,27 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},删除后台用户",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
             List<Long> uids = backUserBO.getUids();
             if(uids.contains(uid)){
-                throw new RuntimeException("不能删除自己");
+                ExceptionUtils.throwException(ErrorMsg.CANT_DELETE_YOUR_ACCOUNT,lang);
             }
             if(uids.contains(1L)){
-                throw new RuntimeException("不能删除超级管理员");
+                ExceptionUtils.throwException(ErrorMsg.CANT_DELETE_SUPERADMIN_ACCOUNT,lang);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backUserBO.setOperatorUid(uid);
             backUserService.deleteUsers(backUserBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -195,29 +203,31 @@ public class BackUserManagementController extends BaseController{
          */
         long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},修改后台用户",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            long beOperatedUid = ValidationUtil.checkAndAssignLong(backUserBO.getUid());
-            ValidationUtil.checkBlankAndAssignString(backUserBO.getPassword(),RegexConstant.PWD_REGEX);
-            ValidationUtil.checkBlankAndAssignString(backUserBO.getUsername(), RegexConstant.USERNAME_REGEX);
-            ValidationUtil.checkBlankAndAssignString(backUserBO.getContact());
-            ValidationUtil.checkBlankAndAssignString(backUserBO.getPersonName(),RegexConstant.NAME_REGEX);
+            long beOperatedUid = ValidationUtil.checkAndAssignLong(backUserBO.getUid(),lang);
+            ValidationUtil.checkBlankAndAssignString(backUserBO.getPassword(),lang,RegexConstant.PWD_REGEX);
+            ValidationUtil.checkBlankAndAssignString(backUserBO.getUsername(),lang,RegexConstant.USERNAME_REGEX);
+            ValidationUtil.checkBlankAndAssignString(backUserBO.getContact(),lang);
+            ValidationUtil.checkBlankAndAssignString(backUserBO.getPersonName(),lang,RegexConstant.NAME_REGEX);
             if(beOperatedUid == uid){
-                throw new RuntimeException("不能修改自己的信息");
+                ExceptionUtils.throwException(ErrorMsg.CANT_MODIFY_YOUR_ACCOUNT_INFO,lang);
             }
             if(beOperatedUid == 1L){
-                throw new RuntimeException("不能修改超级管理员的信息");
+                ExceptionUtils.throwException(ErrorMsg.CANT_MODIFY_SUPERADMIN_ACCOUNT_INFO,lang);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backUserBO.setOperatorUid(uid);
             backUserService.updateUsers(backUserBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -238,24 +248,26 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},查看后台用户的角色信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            Long beOperatedUid = ValidationUtil.checkAndAssignLong(backUserBO.getUid());
+            Long beOperatedUid = ValidationUtil.checkAndAssignLong(backUserBO.getUid(),lang);
             if(beOperatedUid.equals(uid)){
-                throw new RuntimeException("无法查看自己的角色信息");
+                ExceptionUtils.throwException(ErrorMsg.CANT_QUERY_OWN_ROLEINFO,lang);
             }
             if(beOperatedUid.equals(1L)){
-                throw new RuntimeException("无法查看超级管理员的角色信息");
+                ExceptionUtils.throwException(ErrorMsg.CANT_QUERY_SUPERADMIN_ROLEINFO,lang);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             List<BackAuthgroupsVO> backAuthgroupsVOList = backUserService.showRoleInfoUnderAccount(backUserBO);
-            return success(backAuthgroupsVOList);
+            return success(backAuthgroupsVOList,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -277,35 +289,37 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},分配后台用户的角色信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            Long beOperatedUid = ValidationUtil.checkAndAssignLong(backUserBO.getUid());
+            Long beOperatedUid = ValidationUtil.checkAndAssignLong(backUserBO.getUid(),lang);
             List<Long> authgroupIds = backUserBO.getAuthgroupIds();
             if(authgroupIds.contains(1L)){
-                throw new RuntimeException("无法分配超级管理员角色");
+                ExceptionUtils.throwException(ErrorMsg.CANT_ASSIGN_SUPERADMIN_ROLE,lang);
             }
             if(beOperatedUid.equals(uid)){
-                throw new RuntimeException("无法修改自己的角色信息");
+                ExceptionUtils.throwException(ErrorMsg.CANT_MODIFY_YOUR_ROLEINFO,lang);
             }
             if(beOperatedUid.equals(1L)){
-                throw new RuntimeException("无法修改超级管理员的角色信息");
+                ExceptionUtils.throwException(ErrorMsg.CANT_MODIFY_SUPERADMIN_ROLEINFO,lang);
             }
             if(!uid.equals(1L)){
                 if(authgroupIds.contains(2L)){
-                    throw new RuntimeException("无权分配管理员角色");
+                    ExceptionUtils.throwException(ErrorMsg.CANT_ASSIGN_ROLE_OF_ADMIN,lang);
                 }
             }
             //还有管理员之间不能相互修改
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backUserBO.setOperatorUid(uid);
             backUserService.assignRoles4Account(backUserBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -327,21 +341,23 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},创建后台用户的角色信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            String roleName = ValidationUtil.checkBlankAndAssignString(backUserBO.getRoleName());
+            String roleName = ValidationUtil.checkBlankAndAssignString(backUserBO.getRoleName(),lang);
             if(Roles.ADMIN.equals(roleName) || Roles.SUPER_ADMIN.equals(roleName)){
-                throw new RuntimeException("不能创建超级管理员和管理员角色");
+                ExceptionUtils.throwException(ErrorMsg.CANT_CREATE_ADMIN_ROLES,lang);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backRoleService.createRole(backUserBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -365,11 +381,13 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},查询后台的角色信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            ValidationUtil.checkMinAndAssignInt(backUserBO.getRowNum(),1);
-            ValidationUtil.checkMinAndAssignInt(backUserBO.getPage(),1);
-            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getStartTime(),0);
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),Integer.MAX_VALUE);
+            ValidationUtil.checkMinAndAssignInt(backUserBO.getRowNum(),1,lang);
+            ValidationUtil.checkMinAndAssignInt(backUserBO.getPage(),1,lang);
+            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getStartTime(),lang,0);
+            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),Integer.MAX_VALUE,lang);
             if(startTime > endTime){
                 backUserBO.setEndTime(Integer.MAX_VALUE);
             }else{
@@ -377,14 +395,14 @@ public class BackUserManagementController extends BaseController{
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             PageDTO backRolePageDTO = backRoleService.queryRoles(backUserBO);
-            return success(backRolePageDTO);
+            return success(backRolePageDTO,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -406,25 +424,27 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},修改后台的角色信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            long roleId = ValidationUtil.checkAndAssignLong(backUserBO.getRoleId());
-            String roleName = ValidationUtil.checkBlankAndAssignString(backUserBO.getRoleName());
+            long roleId = ValidationUtil.checkAndAssignLong(backUserBO.getRoleId(),lang);
+            String roleName = ValidationUtil.checkBlankAndAssignString(backUserBO.getRoleName(),lang);
             if(roleId == 1L || roleId == 2L){
-                throw new RuntimeException("不能修改管理员角色信息");
+                ExceptionUtils.throwException(ErrorMsg.CANT_MODIFY_ADMIN_ROLES,lang);
             }
             if(Roles.ADMIN.equals(roleName) || Roles.SUPER_ADMIN.equals(roleName)){
-                throw new RuntimeException("不能命名为管理员或超级管理员");
+                ExceptionUtils.throwException(ErrorMsg.CANT_USER_ADMIN_ROLENAME,lang);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backRoleService.updateRole(backUserBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -445,24 +465,26 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},删除后台的角色信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
             List<Long> roleIds = backUserBO.getRoleIds();
             if(roleIds==null || roleIds.size()==0){
-                throw new RuntimeException("请输入要删除的角色id");
+                ExceptionUtils.throwException(ErrorMsg.INPUT_DELETED_ROLEID,lang);
             }
             if(roleIds.contains(1L) || roleIds.contains(2L)){
-                throw new RuntimeException("不能删除管理员和超级管理员角色");
+                ExceptionUtils.throwException(ErrorMsg.CANT_DELETE_ADMIN_ROLES,lang);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backRoleService.deleteRoles(backUserBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -482,21 +504,23 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},查看后台的角色信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            Long roleId = ValidationUtil.checkAndAssignLong(backUserBO.getRoleId());
+            Long roleId = ValidationUtil.checkAndAssignLong(backUserBO.getRoleId(),lang);
             if(roleId.equals(1L)){
-                throw new RuntimeException("无法查看超级管理员的权限信息");
+                ExceptionUtils.throwException(ErrorMsg.CANT_QUERY_SUPERADMIN_AUTHES,lang);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             List<BackAuthesVO> backAuthesVOList = backRoleService.showAuthoritiesUnderRole(backUserBO);
-            return success(backAuthesVOList);
+            return success(backAuthesVOList,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -518,27 +542,29 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},分配后台角色的权限信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            long roleId = ValidationUtil.checkAndAssignLong(backUserBO.getRoleId());
+            long roleId = ValidationUtil.checkAndAssignLong(backUserBO.getRoleId(),lang);
             if(roleId == 1L || roleId == 2L){
-                throw new RuntimeException("不能给管理员或超级管理员分配权限信息");
+                ExceptionUtils.throwException(ErrorMsg.CANT_ASSIGN_AUTH_FOR_ADMINS,lang);
             }
             List<Long> authIds = backUserBO.getAuthIds();
             for(Long authId : BackAuthesEnum.FORBIDDEN_AUTH_INDEX){
                 if(authIds.contains(authId)){
-                    throw new RuntimeException("不能分配核心权限");
+                    ExceptionUtils.throwException(ErrorMsg.CANT_ASSIGN_CORE_AUTHES,lang);
                 }
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             backRoleService.assignAuthorities4Role(backUserBO);
-            return success(null);
+            return success(null,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -563,11 +589,13 @@ public class BackUserManagementController extends BaseController{
          */
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},查看后台的权限信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
         try {
-            ValidationUtil.checkMinAndAssignInt(backUserBO.getRowNum(),1);
-            ValidationUtil.checkMinAndAssignInt(backUserBO.getPage(),1);
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),Integer.MAX_VALUE);
-            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getStartTime(),0);
+            ValidationUtil.checkMinAndAssignInt(backUserBO.getRowNum(),1,lang);
+            ValidationUtil.checkMinAndAssignInt(backUserBO.getPage(),1,lang);
+            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),Integer.MAX_VALUE,lang);
+            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getStartTime(),lang,0);
             if(startTime > endTime){
                 backUserBO.setEndTime(Integer.MAX_VALUE);
             }else{
@@ -575,14 +603,14 @@ public class BackUserManagementController extends BaseController{
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             PageDTO pageDTO = backAuthService.queryAuthorities(backUserBO);
-            return success(pageDTO);
+            return success(pageDTO,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 

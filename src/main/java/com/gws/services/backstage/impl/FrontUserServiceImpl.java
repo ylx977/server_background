@@ -5,17 +5,18 @@ import com.gws.common.constants.backstage.FrontUserApplyStatusEnum;
 import com.gws.common.constants.backstage.FrontUserStatus;
 import com.gws.common.constants.backstage.RegexConstant;
 import com.gws.dto.backstage.PageDTO;
-import com.gws.entity.backstage.FrontUser;
-import com.gws.entity.backstage.FrontUserApplyInfo;
-import com.gws.entity.backstage.FrontUserBO;
+import com.gws.entity.backstage.*;
 import com.gws.repositories.master.backstage.FrontUserApplyInfoMaster;
 import com.gws.repositories.master.backstage.FrontUserMaster;
 import com.gws.repositories.query.backstage.FrontUserApplyInfoQuery;
+import com.gws.repositories.query.backstage.FrontUserIdentityQuery;
 import com.gws.repositories.query.backstage.FrontUserQuery;
 import com.gws.repositories.slave.backstage.FrontUserApplyInfoSlave;
+import com.gws.repositories.slave.backstage.FrontUserIdentitySlave;
 import com.gws.repositories.slave.backstage.FrontUserSlave;
 import com.gws.services.backstage.FrontUserService;
 import com.gws.utils.validate.ValidationUtil;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,12 +46,15 @@ public class FrontUserServiceImpl implements FrontUserService {
 
     private final FrontUserApplyInfoMaster frontUserApplyInfoMaster;
 
+    private final FrontUserIdentitySlave frontUserIdentitySlave;
+
     @Autowired
-    public FrontUserServiceImpl(FrontUserSlave frontUserSlave, FrontUserMaster frontUserMaster, FrontUserApplyInfoSlave frontUserApplyInfoSlave, FrontUserApplyInfoMaster frontUserApplyInfoMaster) {
+    public FrontUserServiceImpl(FrontUserSlave frontUserSlave, FrontUserMaster frontUserMaster, FrontUserApplyInfoSlave frontUserApplyInfoSlave, FrontUserApplyInfoMaster frontUserApplyInfoMaster, FrontUserIdentitySlave frontUserIdentitySlave) {
         this.frontUserSlave = frontUserSlave;
         this.frontUserMaster = frontUserMaster;
         this.frontUserApplyInfoSlave = frontUserApplyInfoSlave;
         this.frontUserApplyInfoMaster = frontUserApplyInfoMaster;
+        this.frontUserIdentitySlave = frontUserIdentitySlave;
     }
 
     @Override
@@ -86,8 +90,37 @@ public class FrontUserServiceImpl implements FrontUserService {
 
         List<FrontUser> list = frontUserPage == null ? Collections.emptyList() : frontUserPage.getContent();
         long totalPage = frontUserPage == null ? 0 : frontUserPage.getTotalElements();
+        if(list.size() == 0){
+            return PageDTO.getPagination(totalPage,list);
+        }
 
-        return PageDTO.getPagination(totalPage,list);
+        List<FrontUserVO> frontUserVOList = new ArrayList<>();
+        List<Long> uids = new ArrayList<>();
+        for(FrontUser frontUser : list) {
+            uids.add(frontUser.getUid());
+            FrontUserVO frontUserVO = new FrontUserVO();
+            BeanUtils.copyProperties(frontUser,frontUserVO);
+            frontUserVOList.add(frontUserVO);
+        }
+
+        FrontUserIdentityQuery frontUserIdentityQuery = new FrontUserIdentityQuery();
+        frontUserIdentityQuery.setUids(uids);
+        List<FrontUserIdentity> userIdentities = frontUserIdentitySlave.findAll(frontUserIdentityQuery);
+
+        for (FrontUserIdentity frontUserIdentity : userIdentities) {
+            Long uid = frontUserIdentity.getUid();
+            for (FrontUserVO frontUserVO : frontUserVOList) {
+                Long uid2 =frontUserVO.getUid();
+                if(uid.equals(uid2)){
+                    frontUserVO.setCardType(frontUserIdentity.getCardType());
+                    frontUserVO.setCardNumber(frontUserIdentity.getCardNumber());
+                    frontUserVO.setRealName(frontUserIdentity.getRealName());
+                }
+            }
+        }
+
+        return PageDTO.getPagination(totalPage,frontUserVOList);
+
     }
 
     @Override

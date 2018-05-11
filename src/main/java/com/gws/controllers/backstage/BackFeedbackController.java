@@ -52,18 +52,20 @@ public class BackFeedbackController extends BaseController{
     public JsonResult queryFeedbacks(@RequestBody FeedbackBO feedbackBO){
         Long uid = (Long) request.getAttribute("uid");
         LOGGER.info("用户:{},修改后台banner基本配置信息",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        feedbackBO.setLang(lang);
         try {
             validate(feedbackBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e);
+            return valiError(e,lang);
         }
         try {
             PageDTO pageDTO = backFeedbackService.queryFeedbacks(feedbackBO);
-            return success(pageDTO);
+            return success(pageDTO,lang);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e);
+            return sysError(e,lang);
         }
     }
 
@@ -73,11 +75,12 @@ public class BackFeedbackController extends BaseController{
      * @param feedbackBO
      */
     private static final void validate(FeedbackBO feedbackBO){
-        ValidationUtil.checkMinAndAssignInt(feedbackBO.getRowNum(),1);
-        ValidationUtil.checkMinAndAssignInt(feedbackBO.getPage(),1);
-        ValidationUtil.checkRangeAndAssignInt(feedbackBO.getProblemType(),1,8);
-        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getEndTime(),Integer.MAX_VALUE);
-        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getStartTime(),0);
+        Integer lang = feedbackBO.getLang();
+        ValidationUtil.checkMinAndAssignInt(feedbackBO.getRowNum(),1,lang);
+        ValidationUtil.checkMinAndAssignInt(feedbackBO.getPage(),1,lang);
+        ValidationUtil.checkRangeAndAssignInt(feedbackBO.getProblemType(),1,8,lang);
+        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getEndTime(),lang,Integer.MAX_VALUE);
+        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getStartTime(),lang,0);
         if(startTime > endTime){
             feedbackBO.setEndTime(Integer.MAX_VALUE);
         }else{
