@@ -110,4 +110,18 @@ public interface BackUserService {
      * @param backUserBO
      */
     void modifyPassword(BackUserBO backUserBO);
+
+    /**
+     * 修改后台用户的状态(冻结或是解冻)
+     * 支持批量删除
+     * @param backUserBO
+     */
+    void updateUserStatus(BackUserBO backUserBO);
+
+    /**
+     * 通过username查询后台用户的信息
+     * @param username
+     * @return
+     */
+    BackUser queryUserByUsername(String username);
 }

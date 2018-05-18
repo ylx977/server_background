@@ -35,7 +35,7 @@ public class MqController extends BaseApiController {
         if (result.getSucc()){
             return success(result.getEntity());
         }
-        return error(result.getErrorCode().getCode(),result.getErrorCode().getMessage());
+        return error(result.getErrorCode().getCode(),result.getErrorCode().getMessageCN());
     }
 
     @RequestMapping("mqConsumer")
@@ -46,7 +46,7 @@ public class MqController extends BaseApiController {
         if (result.getSucc()){
             return success(result.getEntity());
         }
-        return error(result.getErrorCode().getCode(),result.getErrorCode().getMessage());
+        return error(result.getErrorCode().getCode(),result.getErrorCode().getMessageCN());
     }
 
 }

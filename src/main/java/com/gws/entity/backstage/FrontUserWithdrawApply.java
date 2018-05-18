@@ -63,6 +63,9 @@ public class FrontUserWithdrawApply {
     @Column(name = "second_check_name")
     private String secondCheckName;
 
+    @Column(name = "hash")
+    private String hash;
+
     @Column(name = "ctime")
     private Integer ctime;
 

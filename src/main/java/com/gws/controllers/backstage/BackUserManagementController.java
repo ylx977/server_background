@@ -122,7 +122,8 @@ public class BackUserManagementController extends BaseController{
             ValidationUtil.checkMinAndAssignInt(backUserBO.getPage(),1,lang);
             ValidationUtil.checkMinAndAssignInt(backUserBO.getRowNum(),1,lang);
             Integer startTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getStartTime(),lang,0);
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),Integer.MAX_VALUE,lang);
+            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),lang,Integer.MAX_VALUE);
+            backUserBO.setStartTime(startTime);
             if(startTime > endTime){
                 backUserBO.setEndTime(Integer.MAX_VALUE);
             }else{
@@ -324,6 +325,45 @@ public class BackUserManagementController extends BaseController{
     }
 
 
+    /**
+     * 修改用户的状态：冻结=0 还是 正常使用=0
+     * 支持批量修改
+     * {
+     *     "uids"
+     *     "isFreezed"
+     * }
+     * @return
+     */
+    @RequestMapping("/users/updateUserStatus")
+    public JsonResult updateUserStatus(@RequestBody BackUserBO backUserBO){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},修改后台用户的状态",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        backUserBO.setLang(lang);
+        try {
+            List<Long> uids = backUserBO.getUids();
+            if(uids.contains(uid)){
+                ExceptionUtils.throwException(ErrorMsg.CANT_UPDATE_YOUR_STATUS,lang);
+            }
+            if(uids.contains(1L)){
+                ExceptionUtils.throwException(ErrorMsg.CANT_UPDATE_SUPERADMIN_STATUS,lang);
+            }
+            ValidationUtil.checkRangeAndAssignInt(backUserBO.getIsFreezed(),0,1,lang);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return valiError(e,lang);
+        }
+        try {
+            backUserBO.setOperatorUid(uid);
+            backUserService.updateUserStatus(backUserBO);
+            return success(null,lang);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return sysError(e,lang);
+        }
+    }
+
+
     //===================================以下是角色模块=========================================================
     /**
      * 创建角色
@@ -387,7 +427,8 @@ public class BackUserManagementController extends BaseController{
             ValidationUtil.checkMinAndAssignInt(backUserBO.getRowNum(),1,lang);
             ValidationUtil.checkMinAndAssignInt(backUserBO.getPage(),1,lang);
             Integer startTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getStartTime(),lang,0);
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),Integer.MAX_VALUE,lang);
+            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),lang,Integer.MAX_VALUE);
+            backUserBO.setStartTime(startTime);
             if(startTime > endTime){
                 backUserBO.setEndTime(Integer.MAX_VALUE);
             }else{
@@ -594,8 +635,9 @@ public class BackUserManagementController extends BaseController{
         try {
             ValidationUtil.checkMinAndAssignInt(backUserBO.getRowNum(),1,lang);
             ValidationUtil.checkMinAndAssignInt(backUserBO.getPage(),1,lang);
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),Integer.MAX_VALUE,lang);
+            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getEndTime(),lang,Integer.MAX_VALUE);
             Integer startTime = ValidationUtil.checkAndAssignDefaultInt(backUserBO.getStartTime(),lang,0);
+            backUserBO.setStartTime(startTime);
             if(startTime > endTime){
                 backUserBO.setEndTime(Integer.MAX_VALUE);
             }else{

@@ -45,4 +45,8 @@ public class GoldenWithdrawBO {
 
     private Integer lang;
 
+    private Integer payUSDG;
+
+    private Double chargeUSDG;
+
 }

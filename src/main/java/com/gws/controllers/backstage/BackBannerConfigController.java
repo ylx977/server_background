@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +31,7 @@ import java.util.concurrent.ExecutorService;
  */
 @RestController
 @RequestMapping("/api/backstage/bannerConfig")
+@PropertySource(value = {"classpath:application.properties"},encoding = "utf-8")
 public class BackBannerConfigController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackBannerConfigController.class);

@@ -12,7 +12,8 @@ public enum CoinWithdrawStatusEnum {
     TO_CHECK(1,"待审核"),
     FIRST_PASS(2,"初审通过"),
     SECOND_PASS(3,"复审通过"),
-    REJECT(4,"拒绝");
+    REJECT(4,"拒绝"),
+    SUCCESS(5,"成功");
 
     CoinWithdrawStatusEnum(Integer code,String name){
         this.code = code;

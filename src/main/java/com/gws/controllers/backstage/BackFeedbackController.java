@@ -78,7 +78,7 @@ public class BackFeedbackController extends BaseController{
         Integer lang = feedbackBO.getLang();
         ValidationUtil.checkMinAndAssignInt(feedbackBO.getRowNum(),1,lang);
         ValidationUtil.checkMinAndAssignInt(feedbackBO.getPage(),1,lang);
-        ValidationUtil.checkRangeAndAssignInt(feedbackBO.getProblemType(),1,8,lang);
+//        ValidationUtil.checkRangeAndAssignInt(feedbackBO.getProblemType(),1,8,lang);
         Integer endTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getEndTime(),lang,Integer.MAX_VALUE);
         Integer startTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getStartTime(),lang,0);
         if(startTime > endTime){

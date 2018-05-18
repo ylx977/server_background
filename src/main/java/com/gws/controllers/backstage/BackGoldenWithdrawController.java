@@ -5,6 +5,7 @@ import com.gws.controllers.BaseApiController;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
+import com.gws.entity.backstage.BackGoldenCode;
 import com.gws.entity.backstage.GoldenWithdrawBO;
 import com.gws.enums.SystemCode;
 import com.gws.exception.ExceptionUtils;
@@ -66,7 +67,7 @@ public class BackGoldenWithdrawController extends BaseController{
         Integer lang = (Integer) request.getAttribute("lang");
         goldenWithdrawBO.setLang(lang);
         try {
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getEndTime(),Integer.MAX_VALUE,lang);
+            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getEndTime(),lang,Integer.MAX_VALUE);
             Integer startTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getStartTime(),lang,0);
             if(startTime > endTime){
                 goldenWithdrawBO.setEndTime(Integer.MAX_VALUE);
@@ -131,6 +132,37 @@ public class BackGoldenWithdrawController extends BaseController{
             return sysError(e,lang);
         }
     }
+
+
+    /**
+     * 根据黄金提取单id查询该单据下的所有黄金编号
+     * {
+     *     "id"------->黄金提取单的id号
+     * }
+     * @param goldenWithdrawBO
+     * @return
+     */
+    @RequestMapping("/queryGoldenCode")
+    public JsonResult queryGoldenCode(@RequestBody GoldenWithdrawBO goldenWithdrawBO){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.info("用户:{},查询黄金编号",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        goldenWithdrawBO.setLang(lang);
+        try {
+            ValidationUtil.checkAndAssignLong(goldenWithdrawBO.getId(),lang);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return valiError(e,lang);
+        }
+        try {
+            List<BackGoldenCode> backGoldenCodeList = backGoldenWithdrawService.queryGoldenCode(goldenWithdrawBO);
+            return success(backGoldenCodeList,lang);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return sysError(e,lang);
+        }
+    }
+
 
     /**
      * 确认出库

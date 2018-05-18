@@ -161,7 +161,7 @@ public class BackFrontUserManagementController extends BaseController{
      *     "rowNum"
      *     "uid"
      *     "phoneNumber"
-     *     "satrtTime"
+     *     "startTime"
      *     "endTime"
      * }
      * @return
@@ -269,7 +269,7 @@ public class BackFrontUserManagementController extends BaseController{
         Integer lang = frontUserBO.getLang();
         ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1,lang);
         ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1,lang);
-        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(),Integer.MAX_VALUE,lang);
+        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(),lang,Integer.MAX_VALUE);
         Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(),lang,0);
         if(startTime > endTime){
             frontUserBO.setEndTime(Integer.MAX_VALUE);

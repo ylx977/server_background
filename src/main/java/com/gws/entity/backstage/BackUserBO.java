@@ -1,9 +1,11 @@
 package com.gws.entity.backstage;
 
+import com.gws.dto.backstage.UserDetailDTO;
 import lombok.Data;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -59,5 +61,15 @@ public class BackUserBO {
     private String newConfirmedPassword;
 
     private Integer lang;
+
+    private UserDetailDTO userDetailDTO;
+
+    private Integer isFreezed;
+
+    private String phone;
+
+    private String code;
+
+    private HttpServletRequest request;
 
 }

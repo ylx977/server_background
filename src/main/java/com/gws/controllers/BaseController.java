@@ -68,7 +68,7 @@ public class BaseController {
 
     public static JsonResult sysError(Exception e,Integer lang) {
         if(null == lang){
-            return new JsonResult(SystemCode.SUCCESS.getCode(), SystemCode.SUCCESS.getMessageCN(),null);
+            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessageCN()+":"+e.getMessage(), null);
         }
         if(lang == LangMark.CN){
             //如果是1显示中文
@@ -88,7 +88,7 @@ public class BaseController {
 
     public static JsonResult valiError(Exception e,Integer lang) {
         if(null == lang){
-            return new JsonResult(SystemCode.SUCCESS.getCode(), SystemCode.SUCCESS.getMessageCN(), null);
+            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessageCN()+":"+e.getMessage(), null);
         }
         if(lang == LangMark.CN){
             return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessageCN()+":"+e.getMessage(), null);
@@ -106,7 +106,7 @@ public class BaseController {
 
     public static JsonResult loginSuccess(Object data,Integer lang){
         if(null == lang){
-            return new JsonResult(SystemCode.SUCCESS.getCode(), SystemCode.SUCCESS.getMessageCN(), data);
+            return new JsonResult(SystemCode.SUCCESS_LOGIN.getCode(), SystemCode.SUCCESS_LOGIN.getMessageCN(),data);
         }
         if(lang == LangMark.CN){
             return new JsonResult(SystemCode.SUCCESS_LOGIN.getCode(), SystemCode.SUCCESS_LOGIN.getMessageCN(),data);
@@ -123,7 +123,7 @@ public class BaseController {
 
     public static JsonResult loginError(Exception e,Integer lang){
         if(null == lang){
-            return new JsonResult(SystemCode.SUCCESS.getCode(), SystemCode.SUCCESS.getMessageCN(), null);
+            return new JsonResult(SystemCode.FAIL_LOGIN.getCode(), SystemCode.FAIL_LOGIN.getMessageCN()+":"+e.getMessage(), null);
         }
         if(lang == LangMark.CN){
             return new JsonResult(SystemCode.FAIL_LOGIN.getCode(), SystemCode.FAIL_LOGIN.getMessageCN()+":"+e.getMessage(), null);
@@ -134,13 +134,26 @@ public class BaseController {
         }
     }
 
+    public static JsonResult noUserError(Integer lang){
+        if(null == lang){
+            return new JsonResult(SystemCode.NO_USERNAME.getCode(), SystemCode.NO_USERNAME.getMessageCN(), null);
+        }
+        if(lang == LangMark.CN){
+            return new JsonResult(SystemCode.NO_USERNAME.getCode(), SystemCode.NO_USERNAME.getMessageCN(), null);
+        }else if(lang == LangMark.EN){
+            return new JsonResult(SystemCode.NO_USERNAME.getCode(), SystemCode.NO_USERNAME.getMessageEN(), null);
+        }else{
+            return new JsonResult(SystemCode.NO_USERNAME.getCode(), SystemCode.NO_USERNAME.getMessageCN(), null);
+        }
+    }
+
     public static JsonResult loginFail(){
         return new JsonResult(SystemCode.WRONG_USER_PWD.getCode(), SystemCode.WRONG_USER_PWD.getMessageCN(), null);
     }
 
     public static JsonResult loginFail(Integer lang){
         if(null == lang){
-            return new JsonResult(SystemCode.SUCCESS.getCode(), SystemCode.SUCCESS.getMessageCN(), null);
+            return new JsonResult(SystemCode.WRONG_USER_PWD.getCode(), SystemCode.WRONG_USER_PWD.getMessageCN(), null);
         }
         if(lang == LangMark.CN){
             return new JsonResult(SystemCode.WRONG_USER_PWD.getCode(), SystemCode.WRONG_USER_PWD.getMessageCN(), null);
@@ -160,11 +173,11 @@ public class BaseController {
             return new JsonResult(SystemCode.NOT_AUTH.getCode(),SystemCode.NOT_AUTH.getMessageCN()+":"+e.getMessage(),null);
         }
         if(lang == LangMark.CN){
-            return new JsonResult(SystemCode.NOT_AUTH.getCode(), SystemCode.NOT_AUTH.getMessageCN(), null);
+            return new JsonResult(SystemCode.NOT_AUTH.getCode(),SystemCode.NOT_AUTH.getMessageCN()+":"+e.getMessage(),null);
         }else if(lang == LangMark.EN){
-            return new JsonResult(SystemCode.NOT_AUTH.getCode(), SystemCode.NOT_AUTH.getMessageEN(), null);
+            return new JsonResult(SystemCode.NOT_AUTH.getCode(),SystemCode.NOT_AUTH.getMessageEN()+":"+e.getMessage(),null);
         }else{
-            return new JsonResult(SystemCode.NOT_AUTH.getCode(), SystemCode.NOT_AUTH.getMessageCN(), null);
+            return new JsonResult(SystemCode.NOT_AUTH.getCode(),SystemCode.NOT_AUTH.getMessageCN()+":"+e.getMessage(),null);
         }
     }
     public static JsonResult tokenError(){
@@ -176,11 +189,36 @@ public class BaseController {
             return new JsonResult(SystemCode.TOKEN_ERROR.getCode(),SystemCode.TOKEN_ERROR.getMessageCN()+":"+e.getMessage(),null);
         }
         if(lang == LangMark.CN){
-            return new JsonResult(SystemCode.TOKEN_ERROR.getCode(), SystemCode.TOKEN_ERROR.getMessageCN(), null);
+            return new JsonResult(SystemCode.TOKEN_ERROR.getCode(),SystemCode.TOKEN_ERROR.getMessageCN()+":"+e.getMessage(),null);
         }else if(lang == LangMark.EN){
-            return new JsonResult(SystemCode.TOKEN_ERROR.getCode(), SystemCode.TOKEN_ERROR.getMessageEN(), null);
+            return new JsonResult(SystemCode.TOKEN_ERROR.getCode(),SystemCode.TOKEN_ERROR.getMessageEN()+":"+e.getMessage(),null);
         }else{
-            return new JsonResult(SystemCode.TOKEN_ERROR.getCode(), SystemCode.TOKEN_ERROR.getMessageCN(), null);
+            return new JsonResult(SystemCode.TOKEN_ERROR.getCode(),SystemCode.TOKEN_ERROR.getMessageCN()+":"+e.getMessage(),null);
+        }
+    }
+
+    public static JsonResult freezeFail(Integer lang){
+        if(null == lang){
+            return new JsonResult(SystemCode.FREEZE_FAIL.getCode(),SystemCode.FREEZE_FAIL.getMessageCN(),null);
+        }
+        if(lang == LangMark.CN){
+            return new JsonResult(SystemCode.FREEZE_FAIL.getCode(),SystemCode.FREEZE_FAIL.getMessageCN(),null);
+        }else if(lang == LangMark.EN){
+            return new JsonResult(SystemCode.FREEZE_FAIL.getCode(),SystemCode.FREEZE_FAIL.getMessageEN(),null);
+        }else{
+            return new JsonResult(SystemCode.FREEZE_FAIL.getCode(),SystemCode.FREEZE_FAIL.getMessageCN(),null);
+        }
+    }
+    public static JsonResult deleteFail(Integer lang){
+        if(null == lang){
+            return new JsonResult(SystemCode.DELETE_FAIL.getCode(),SystemCode.DELETE_FAIL.getMessageCN(),null);
+        }
+        if(lang == LangMark.CN){
+            return new JsonResult(SystemCode.DELETE_FAIL.getCode(),SystemCode.DELETE_FAIL.getMessageCN(),null);
+        }else if(lang == LangMark.EN){
+            return new JsonResult(SystemCode.DELETE_FAIL.getCode(),SystemCode.DELETE_FAIL.getMessageEN(),null);
+        }else{
+            return new JsonResult(SystemCode.DELETE_FAIL.getCode(),SystemCode.DELETE_FAIL.getMessageCN(),null);
         }
     }
 

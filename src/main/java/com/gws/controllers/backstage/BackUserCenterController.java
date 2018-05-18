@@ -80,6 +80,7 @@ public class BackUserCenterController extends BaseController{
             return valiError(e,lang);
         }
         try {
+            backUserBO.setUserDetailDTO(userDetailDTO);
             backUserService.modifyPassword(backUserBO);
             return success(null,lang);
         }catch (Exception e){

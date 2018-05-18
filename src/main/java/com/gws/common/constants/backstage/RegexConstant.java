@@ -14,6 +14,11 @@ public class RegexConstant {
 	public static final String PWD_REGEX="^[a-zA-Z0-9]{5,20}$";
 
 	/**
+	 * 校验验证码
+	 */
+	public static final String CODE_REGEX="^[0-9]{4,20}$";
+
+	/**
 	 * 校验用户名
 	 */
 	public static final String USERNAME_REGEX="^\\w{5,20}$";

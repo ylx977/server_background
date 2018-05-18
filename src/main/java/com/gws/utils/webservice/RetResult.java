@@ -27,13 +27,13 @@ public class RetResult {
 	
 	public RetResult(SystemCode codeStatus, Object data) {
 		this.code = codeStatus.getCode();
-		this.message = codeStatus.getMessage();
+		this.message = codeStatus.getMessageCN();
 		this.data = data;
 	}
 	
 	public RetResult(SystemCode codeStatus) {
 		this.code = codeStatus.getCode();
-		this.message = codeStatus.getMessage();
+		this.message = codeStatus.getMessageCN();
 	}
 
 	public String getCode() {

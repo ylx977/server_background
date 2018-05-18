@@ -118,4 +118,5 @@ public class BannerTableServiceImpl implements BannerTableService {
             throw new RuntimeException("参数不能全为空");
         }
     }
+
 }

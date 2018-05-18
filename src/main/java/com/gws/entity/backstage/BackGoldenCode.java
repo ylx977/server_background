@@ -24,7 +24,7 @@ public class BackGoldenCode {
     private String goldenCode;
 
     @Column(name = "golden_withdraw_id")
-    private Long goldenWithdrawIid;
+    private Long goldenWithdrawId;
 
     @Column(name = "ctime")
     private Integer ctime;

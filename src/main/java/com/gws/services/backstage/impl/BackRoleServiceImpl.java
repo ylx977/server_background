@@ -109,6 +109,8 @@ public class BackRoleServiceImpl implements BackRoleService {
 
     @Override
     public PageDTO queryRoles(BackUserBO backUserBO) {
+        Integer page = backUserBO.getPage();
+        Integer rowNum = backUserBO.getRowNum();
 
         BackAuthgroupsQuery backAuthgroupsQuery = new BackAuthgroupsQuery();
         if(!StringUtils.isEmpty(backUserBO.getRoleName())){
@@ -117,7 +119,7 @@ public class BackRoleServiceImpl implements BackRoleService {
         backAuthgroupsQuery.setCstartTime(backUserBO.getStartTime());
         backAuthgroupsQuery.setCendTime(backUserBO.getEndTime());
         Sort sort = new Sort(Sort.Direction.DESC,"ctime");
-        Pageable pageable = new PageRequest(backUserBO.getPage()-1,backUserBO.getRowNum(),sort);
+        Pageable pageable = new PageRequest(page - 1, rowNum,sort);
         Page<BackAuthgroups> backAuthgroupsPage = backAuthgroupsSlave.findAll(backAuthgroupsQuery, pageable);
         List<BackAuthgroups> list = backAuthgroupsPage == null ? Collections.EMPTY_LIST : backAuthgroupsPage.getContent();
         long totalPage = backAuthgroupsPage == null ? 0 : backAuthgroupsPage.getTotalElements();

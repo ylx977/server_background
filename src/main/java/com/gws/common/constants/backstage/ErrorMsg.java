@@ -47,8 +47,15 @@ public enum ErrorMsg {
     CANT_DELETE_SUPERADMIN_ACCOUNT("不能删除超级管理员的账号","you are not allowed to delete super admin account"),
     TOKEN_FAIL("TOKEN验证失败，请重新失败","token validation fail, please login again"),
     NULL_AUTH("Authorization为空","you have lost your Authorization in your request header"),
+    BLOCK_CHIAN_ERROR("区块链发生错误: ","blockChain occurs error: "),
+    SM_ERROR("短信服务出错: ","short message service occurs error: "),
+    CANT_UPDATE_YOUR_STATUS("不能修改自己账户的状态","you can't freeze or unfreeze your account"),
+    CANT_UPDATE_SUPERADMIN_STATUS("不能修改超级管理员的状态","you can't freeze or unfreeze super admin's account"),
+    USER_AND_CONTACT_NOT_FOUNT("该用户的账号信息和联系方式可能不匹配，请确认预留联系方式是否正确","the contact of this user is inconsistent with the contact you set when you create your account, or you have to contact administrator to reset your contact"),
 
-
+    UPDATE_USER_INFO_FAIL("修改用户信息失败","fail to update users info"),
+    WRONG_CONTACT("该用户的联系方式不是手机号","the contact of this user is not the format of phone number"),
+    MONEY_NOT_ENOUGH("资金数量不足","the leftover money is not enough"),
 
 
 

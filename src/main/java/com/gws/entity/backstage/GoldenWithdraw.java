@@ -30,7 +30,7 @@ public class GoldenWithdraw {
     private String phoneNumber;
 
     @Column(name = "withdraw_unit")
-    private String withdrawUnit;
+    private Integer withdrawUnit;
 
     @Column(name = "withdraw_amount")
     private Integer withdrawAmount;

@@ -20,6 +20,7 @@ public class UserDetailDTO {
     private Integer ctime;
     private Integer utime;
     private Integer isDelete;
+    private Integer isFreezed;
     private String tokenId;
     private String token;
     private List<String> roleName;

@@ -33,7 +33,7 @@ public class AuthorityInterceptor extends HandlerInterceptorAdapter {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String tokenAndUserId = request.getHeader("Authorization");
-        Integer lang = ValidationUtil.getInteger(request.getHeader("lang"),1);
+        Integer lang = (Integer)(request.getAttribute("lang"));
         Long uid = ValidationUtil.checkAndAssignLong(tokenAndUserId.split("&")[1],lang);
         try {
             LOGGER.info("对用户:{},权限进行校验",uid);

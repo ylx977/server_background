@@ -33,8 +33,7 @@ public class TokenInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        Integer lang = ValidationUtil.getInteger(request.getHeader("lang"),1);
-        request.setAttribute("lang",lang);
+        Integer lang = (Integer)(request.getAttribute("lang"));
         try {
             LOGGER.info("对用户的token信息进行校验");
             String tokenAndUserId = request.getHeader("Authorization");

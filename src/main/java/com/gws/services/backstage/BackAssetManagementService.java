@@ -102,4 +102,11 @@ public interface BackAssetManagementService {
      * @param assetBO
      */
     void setDefaultAddress(AssetBO assetBO);
+
+
+    /**
+     * 超级管理员才有权限操作的提取平台比特元
+     * @param assetBO
+     */
+    void withdrawBTY(AssetBO assetBO);
 }

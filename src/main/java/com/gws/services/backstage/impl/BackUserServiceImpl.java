@@ -256,6 +256,7 @@ public class BackUserServiceImpl implements BackUserService {
         BeanUtils.copyProperties(backUserBO,backUser);
         backUser.setUid(idGlobalGenerator.getSeqId(BackUser.class));
         backUser.setIsDelete(1);
+        backUser.setIsFreezed(1);
         backUserMaster.save(backUser);
     }
 
@@ -328,6 +329,7 @@ public class BackUserServiceImpl implements BackUserService {
         backUser.setIsDelete(0);
         backUserMaster.update(backUser, backUsersQuery, "isDelete");
 
+        //删除用户的各种缓存信息
         deleteUserRredisInfo(uids.toArray(new Long[0]));
     }
 
@@ -392,6 +394,7 @@ public class BackUserServiceImpl implements BackUserService {
         backUser.setPersonName(Roles.SUPER_ADMIN);
         backUser.setContact("-");
         backUser.setIsDelete(1);
+        backUser.setIsFreezed(1);
         backUserMaster.save(backUser);
 
         //生成管理员对应的token信息
@@ -645,10 +648,59 @@ public class BackUserServiceImpl implements BackUserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void modifyPassword(BackUserBO backUserBO) {
+        UserDetailDTO userDetailDTO = backUserBO.getUserDetailDTO();
+        String username = userDetailDTO.getUsername();//用来删缓存的
         Long uid = backUserBO.getUid();
         String newPassword = backUserBO.getNewPassword();
         BackUser backUser = new BackUser();
         backUser.setPassword(newPassword);
         backUserMaster.updateById(backUser,uid,"password");
+
+        //*************************删除用户的缓存信息***************************
+        //删用户的token信息
+        redisUtil.delete(RedisConfig.USER_TOKEN_PREFIX + uid);
+        //因为修改了密码，必须要将这个缓存删除
+        redisUtil.delete(RedisConfig.LOGIN_USERDETAIL_PREFIX + username);
+        redisUtil.delete(RedisConfig.USER_AUTH_PREFIX + uid);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserStatus(BackUserBO backUserBO) {
+        //被删除的uids
+        List<Long> uids = backUserBO.getUids();
+        //停用还是启用
+        Integer isFreezed = backUserBO.getIsFreezed();
+
+        //操作人id
+        Long operatorUid = backUserBO.getOperatorUid();
+
+        if(!operatorUid.equals(1L)){
+            //如果是超级管理员除了自己的信息不能看到其他人都能看到
+            Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1,2)");
+            List<Long> resultList = (List<Long>) query.getResultList();
+            for(Long uid : resultList){
+                if(uids.contains(uid)){
+                    throw new RuntimeException("不能修改同级别的管理员用户的状态");
+                }
+            }
+        }
+
+        BackUsersQuery backUsersQuery = new BackUsersQuery();
+        backUsersQuery.setUids(uids);
+        BackUser backUser = new BackUser();
+        backUser.setIsFreezed(isFreezed);
+        backUserMaster.update(backUser, backUsersQuery, "isFreezed");
+
+        //删除用户的各种缓存信息
+        deleteUserRredisInfo(uids.toArray(new Long[0]));
+    }
+
+    @Override
+    public BackUser queryUserByUsername(String username) {
+        BackUsersQuery backUsersQuery = new BackUsersQuery();
+        backUsersQuery.setUsername(username);
+        BackUser one = backUserMaster.findOne(backUsersQuery);
+        return one;
     }
 }

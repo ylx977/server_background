@@ -36,4 +36,7 @@ public class BackUser {
 
     @Column(name = "is_deleted")
     private Integer isDelete;
+
+    @Column(name = "is_freezed")
+    private Integer isFreezed;
 }

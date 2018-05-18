@@ -13,12 +13,12 @@ public class GoldenUnit {
     /**
      * 黄金提取的单位之一，100g一份
      */
-    public static final String HUNDRED = "100g";
+    public static final Integer HUNDRED = 1;
 
     /**
      * 黄金提取的单位之一，1000g一份
      */
-    public static final String THOUSAND = "1000g";
+    public static final Integer THOUSAND = 2;
 
 
 }

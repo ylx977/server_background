@@ -23,6 +23,15 @@ public class FrontUserRecharge {
     @Column(name = "uid")
     private Long uid;
 
+    @Column(name = "person_name")
+    private String personName;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "email")
+    private String email;
+
     @Column(name = "coin_type")
     private Integer coinType;
 

@@ -30,7 +30,7 @@ public class GlobalControllerExceptionHandler {
      * @return
      */
     protected RetResult response(SystemCode codeStatus, Object data, HttpServletResponse response) {
-        return new RetResult(codeStatus.getCode(), codeStatus.getMessage(), data);
+        return new RetResult(codeStatus.getCode(), codeStatus.getMessageCN(), data);
     }
 
     /**

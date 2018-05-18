@@ -50,6 +50,12 @@ public class UsdgUserAccount {
     @Column(name = "freeze_amount")
     private Double freezeAmount;
 
+    @Column(name = "height")
+    private Long height;
+
+    @Column(name = "index")
+    private Long index;
+
     @Column(name = "ctime")
     private Integer ctime;
 

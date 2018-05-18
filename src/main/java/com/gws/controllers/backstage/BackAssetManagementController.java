@@ -501,6 +501,43 @@ public class BackAssetManagementController extends BaseController{
     }
 
 
+    /**
+     * 超级管理员提币操作（这个操作只有超级管理员有）
+     * {
+     *     "toAddress"------>打的地址
+     *     "code"----------->验证码
+     *     "amount"--------->提币的数量
+     *     "fee"------------>旷工费
+     *     "note"----------->当前用户的备注信息（选填）
+     * }
+     * @return
+     */
+    @RequestMapping("/balance/withdrawBTY")
+    public JsonResult withdrawBTY(@RequestBody AssetBO assetBO){
+        Long uid = (Long) request.getAttribute("uid");
+        LOGGER.warn("用户:{},进行提币操作",uid);
+        Integer lang = (Integer) request.getAttribute("lang");
+        assetBO.setLang(lang);
+        try {
+            ValidationUtil.checkBlankAndAssignString(assetBO.getToAddress(),lang);
+            ValidationUtil.checkBlankAndAssignString(assetBO.getCode(),lang);
+            ValidationUtil.checkAndAssignDouble(assetBO.getAmount(),lang);
+            ValidationUtil.checkAndAssignDouble(assetBO.getFee(),lang);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
+            return valiError(e,lang);
+        }
+        try {
+            assetBO.setRequest(request);
+            backAssetManagementService.withdrawBTY(assetBO);
+            return success(null,lang);
+        }catch (Exception e){
+            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
+            return sysError(e,lang);
+        }
+    }
+
+
 
 
 
@@ -514,7 +551,7 @@ public class BackAssetManagementController extends BaseController{
         ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1,lang);
         ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1,lang);
         Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(),lang, 0);
-        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(), Integer.MAX_VALUE,lang);
+        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(),lang, Integer.MAX_VALUE);
         frontUserBO.setStartTime(startTime);
         if(startTime > endTime){
             frontUserBO.setEndTime(Integer.MAX_VALUE);

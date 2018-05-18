@@ -21,6 +21,7 @@ public enum BackAuthesEnum {
     DELETE_USERS(4L,"删除后台用户","/api/backstage/userManagement/users/deleteUsers"),
     SHOW_USER_ROLES(5L,"查看后台用户的角色信息","/api/backstage/userManagement/users/showRoleInfoUnderUser"),
     ASSIGN_USER_ROLES(6L,"分配后台用户的角色信息","/api/backstage/userManagement/users/assignRoles4User"),
+    UPDATE_USER_STATUS(6L,"修改后台用户的状态","/api/backstage/userManagement/users/updateUserStatus"),
 
     CREATE_ROLE(7L,"创建后台角色","/api/backstage/userManagement/role/createRole"),
     QUERY_ROLES(8L,"查询后台角色信息","/api/backstage/userManagement/role/queryRoles"),
@@ -34,6 +35,7 @@ public enum BackAuthesEnum {
     MODIFY_PASSWORD(14L,"修改个人密码","/api/backstage/userCenter/modifyPassword"),
     QUERY_GOLDEN_WITHDRAW(15L,"查询黄金提取记录信息","/api/backstage/goldenWithdraw/queryGoldenWithdraw"),
     INSERT_COLEDN_CODE(16L,"录入黄金编号","/api/backstage/goldenWithdraw/insertGoldenCode"),
+    QUERY_COLEDN_CODE(17L,"查看黄金编号","/api/backstage/goldenWithdraw/queryGoldenCode"),
 
     QUERY_FRONT_USERS(17L,"查询前台用户信息","/api/backstage/frontUserManagement/users/queryFrontUserInfo"),
     QUERY_FRONT_APPLY_INFO(18L,"查询前台用户修改申请","/api/backstage/frontUserManagement/review/queryApplyInfo"),
@@ -64,6 +66,9 @@ public enum BackAuthesEnum {
     DELETE_MANAGED_ADDRESSES(35L,"删除管理地址","/api/backstage/assetManagement/balance/deleteAddress"),
     ADD_MANAGED_ADDRESSES(35L,"添加管理地址","/api/backstage/assetManagement/balance/addAddress"),
     SET_DEFAULT_MANAGED_ADDRESSES(35L,"设置管理的默认地址","/api/backstage/assetManagement/balance/setDefaultAddress"),
+
+    //---------------------->超级管理员权限
+    BTY_WITHDRAW(35L,"提取比特元","/api/backstage/assetManagement/balance/withdrawBTY"),
 
 
     QUERY_FEEDBACK(35L,"查询前台用户反馈信息","/api/backstage/feedback/queryFeedbacks"),

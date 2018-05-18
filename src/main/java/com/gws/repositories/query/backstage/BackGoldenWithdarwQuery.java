@@ -9,6 +9,7 @@ import com.gws.utils.query.core.BaseQuery;
 import lombok.Data;
 
 /**
+ * @author ylx
  * Created by fuzamei on 2018/4/20.
  */
 @QBindEntity(entityClass = GoldenWithdraw.class)
@@ -31,7 +32,7 @@ public class BackGoldenWithdarwQuery extends BaseQuery{
     private String phoneNumber;
 
     @QBindAttrField(fieldName ="withdrawUnit",where = Where.equal)
-    private String withdrawUnit;
+    private Integer withdrawUnit;
 
     @QBindAttrField(fieldName ="withdrawAmount",where = Where.equal)
     private Integer withdrawAmount;
@@ -47,6 +48,9 @@ public class BackGoldenWithdarwQuery extends BaseQuery{
 
     @QBindAttrField(fieldName ="withdrawTime",where = Where.equal)
     private Integer withdrawTime;
+
+    @QBindAttrField(fieldName ="withdrawTime",where = Where.lessThan)
+    private Integer overWithdrawTime;
 
     @QBindAttrField(fieldName ="ctime",where = Where.greaterThanOrEqualTo)
     private Integer cstartTime;

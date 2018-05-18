@@ -19,6 +19,9 @@ public enum SystemCode implements CodeStatus {
     VALIDATION_ERROR("208", "校验失败","fail to validate your parameter"),
     FAIL_LOGIN("209", "登录失败","fail to login"),
     WRONG_USER_PWD("210", "用户名密码错误","wrong password or username"),
+    FREEZE_FAIL("211", "用户账号已被冻结","user's account has been locked, please contact administrator"),
+    DELETE_FAIL("212", "用户账号已被删除","user's account has been deleted"),
+    NO_USERNAME("213", "该用户名不存在","this username doesn't exists"),
 
     //==================以下是成功部分====================
     SUCCESS_LOGIN("200","登录成功","login success")
