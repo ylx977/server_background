@@ -2,6 +2,7 @@ package com.gws.interceptor.backstage;
 
 import com.alibaba.fastjson.JSON;
 import com.gws.common.constants.backstage.BackUserStatus;
+import com.gws.configuration.backstage.LangConfig;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.UserDetailDTO;
@@ -28,15 +29,14 @@ public class FreezeInterceptor extends HandlerInterceptorAdapter {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String tokenAndUserId = request.getHeader("Authorization");
-        Integer lang = (Integer)(request.getAttribute("lang"));
-        Long uid = ValidationUtil.checkAndAssignLong(tokenAndUserId.split("&")[1],lang);
+        Long uid = ValidationUtil.checkAndAssignLong(tokenAndUserId.split("&")[1]);
         UserDetailDTO userDetailDTO = (UserDetailDTO) request.getAttribute("userDetailDTO");
         LOGGER.info("对用户的冻结状态和删除状态进行检查");
         //检查是否是冻结状态
         if(userDetailDTO.getIsFreezed().equals(BackUserStatus.FREEZED)){
             LOGGER.error("用户:{},当前用户已经被冻结",uid);
             PrintWriter writer = response.getWriter();
-            JsonResult jsonResult = BaseController.freezeFail(lang);
+            JsonResult jsonResult = BaseController.freezeFail();
             response.setContentType("application/json");
             writer.append(JSON.toJSONString(jsonResult));
             return false;
@@ -45,7 +45,7 @@ public class FreezeInterceptor extends HandlerInterceptorAdapter {
         if(userDetailDTO.getIsDelete().equals(BackUserStatus.DELETED)){
             LOGGER.error("用户:{},当前用户已经被删除",uid);
             PrintWriter writer = response.getWriter();
-            JsonResult jsonResult = BaseController.deleteFail(lang);
+            JsonResult jsonResult = BaseController.deleteFail();
             response.setContentType("application/json");
             writer.append(JSON.toJSONString(jsonResult));
             return false;

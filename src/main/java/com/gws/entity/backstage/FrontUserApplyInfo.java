@@ -32,8 +32,8 @@ public class FrontUserApplyInfo {
     @Column(name = "newinfo")
     private String newInfo;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
+//    @Column(name = "phone_number")
+//    private String phoneNumber;
 
     @Column(name = "apply_status")
     private Integer applyStatus;

@@ -17,4 +17,6 @@ public class FrontUserAssetVO {
 
     private Double btyNum;
 
+    private Double totalAssets;
+
 }

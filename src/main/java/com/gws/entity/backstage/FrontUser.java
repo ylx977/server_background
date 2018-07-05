@@ -23,8 +23,8 @@ public class FrontUser {
     @Column(name = "user_name")
     private String username;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
+//    @Column(name = "phone_number")
+//    private String phoneNumber;
 
     @Column(name = "email_address")
     private String emailAddress;

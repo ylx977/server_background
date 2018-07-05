@@ -44,8 +44,8 @@ public class Protobuf4EdsaUtils {
         Msg.WriteRequest.Builder writeRequest = Msg.WriteRequest.newBuilder();
         Msg.RequestTransfer.Builder transfer = Msg.RequestTransfer.newBuilder();
         transfer.setInstructionId(instructionId);
-        transfer.setUid(ByteString.copyFrom(fromAdd.getBytes()));
-        transfer.setToAddr(ByteString.copyFrom(toAdd.getBytes()));
+        transfer.setUid(ByteString.copyFrom(HexUtil.hexString2Bytes(fromAdd)));
+        transfer.setToAddr(ByteString.copyFrom(HexUtil.hexString2Bytes(toAdd)));
         transfer.setAmount(amount);
         transfer.setSymbolId(symbolId);
         transfer.setActionId(Msg.MessageType.MsgTransfer);
@@ -54,7 +54,7 @@ public class Protobuf4EdsaUtils {
         writeRequest.setTransfer(transfer);
         writeRequest.setId(0L);
 //        writeRequest.setCreateTime();
-        writeRequest.setSign(getSign(writeRequest,privateKey));
+        writeRequest.setSign(getSign(transfer,privateKey));
 
         //最终的请求数据
         Msg.WriteRequest finalRequest = writeRequest.build();
@@ -64,10 +64,10 @@ public class Protobuf4EdsaUtils {
     }
 
 
-    private static final ByteString getSign(Msg.WriteRequest.Builder writeRequest, String operatorKey) {
+    private static final ByteString getSign(Msg.RequestTransfer.Builder transfer, String operatorKey) {
         try {
-            Msg.WriteRequest writeRequestBuild = writeRequest.build();
-            byte[] sourceDataBytes = writeRequestBuild.toByteArray();
+            Msg.RequestTransfer requestTransfer = transfer.build();
+            byte[] sourceDataBytes = requestTransfer.toByteArray();
             //todo 对元数据进行进行加密
             EdDSANamedCurveSpec spec = EdDSANamedCurveTable.getByName("Ed25519");
             //就是SHA-512
@@ -92,15 +92,25 @@ public class Protobuf4EdsaUtils {
     }
 
     public static void main(String[] args) {
-        String userprikey = "50fcf39115c859ac86ce698010193c1bb7333450fbc0b235a0aca47e5ea21ce9";
-        String userpubkey = "141d13555786a1c2cf1b2fe7e6779f2376fc6282e0bdce86a05e950100c640edd246e4a2a5e4bf821925391d247143f67b3e306db153fd2921188c6aa2c5666f";
-        String bankpubkey = ConfReadUtil.getProperty("blockchain.bankPubkey");
-        ProtobufBean protobufBean = requestTransfer(userprikey, SymbolId.BTY, userpubkey, bankpubkey, 100000000L);
+
+        String privateKey = KeyUtils.getPrivateKey1(KeyUtils.getRandom());
+        String publicKey = KeyUtils.getPublicKey(privateKey);
+        System.out.println(privateKey);
+        System.out.println(publicKey);
+        String userprikey = "a1de1af521a6701260112f0b0487f7034a5abe23719825a628549cca11c6c0ef";
+        System.out.println(userprikey);
+        String userpubkey = "2f05b971096c569ff361c5ea277fe79b44c2e86a5d6f8a13d32e90b5a58bc786";
+        System.out.println(userpubkey);
+        String bankpubkey = "9c885ce7664ed3c3675df8e49590c141665d94add5bf72a816a8d8a78bd8fbe5";
+        String bankprikey = "017615faee7ade72ecc9838f06e954ab4581802c7be22668c90508c8a9bee1e5";
+//        ProtobufBean protobufBean = requestTransfer(userprikey, SymbolId.USDG, userpubkey, bankpubkey, 0L);
+        ProtobufBean protobufBean = requestTransfer(bankprikey, SymbolId.USDG, bankpubkey, userpubkey, 100000000L);
         String jsonResult = BlockUtils.sendPostParam(protobufBean);
-        boolean flag = BlockUtils.vilaResult(jsonResult);
-        if(!flag){
-            System.out.println(BlockUtils.getErrorMessage(jsonResult));
-        }
+//        System.out.println(jsonResult);
+//        boolean flag = BlockUtils.vilaResult(jsonResult);
+//        if(!flag){
+//            System.out.println(BlockUtils.getErrorMessage(jsonResult));
+//        }
     }
 
 }

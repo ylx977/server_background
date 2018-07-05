@@ -1,6 +1,7 @@
 package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.RegexConstant;
+import com.gws.configuration.backstage.UidConfig;
 import com.gws.controllers.BaseApiController;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
@@ -60,22 +61,20 @@ public class BackFrontUserManagementController extends BaseController{
          * 2：基本参数校验
          * 3：将前台用户的信息根据所给条件查询出来
          */
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查看前台用户信息",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = frontUserService.queryFrontUsers(frontUserBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -96,22 +95,20 @@ public class BackFrontUserManagementController extends BaseController{
          * 2：基本参数校验
          * 3：将前台用户的手机号或者邮箱地址修改
          */
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},修改前台用户信息",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(frontUserBO.getUid(),lang);
+            ValidationUtil.checkAndAssignLong(frontUserBO.getUid());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             frontUserService.updateFrontUserInfo(frontUserBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
 
     }
@@ -136,22 +133,20 @@ public class BackFrontUserManagementController extends BaseController{
          * 2：基本参数校验
          * 3：查询出所有用户的修改申请信息
          */
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查看前台用户申请修改审核信息",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = frontUserService.queryApplyInfo(frontUserBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
     /**
@@ -173,22 +168,20 @@ public class BackFrontUserManagementController extends BaseController{
          * 2：基本参数校验
          * 3：查询出所有用户的修改申请信息
          */
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查看前台用户申请修改历史记录",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = frontUserService.queryApplyHistory(frontUserBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -208,22 +201,20 @@ public class BackFrontUserManagementController extends BaseController{
          * 4：修改用户申请表中的状态为已经修改
          * 5：再根据用户提交的申请修改用户的信息
          */
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},同意前台用户的修改申请",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(frontUserBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             frontUserService.approveApply(frontUserBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -242,22 +233,20 @@ public class BackFrontUserManagementController extends BaseController{
          * 3：检查该申请数据的状态是否满足要求(否则报错)
          * 4：修改用户申请表中的状态为已经拒绝
          */
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},拒绝前台用户的修改申请",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(frontUserBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             frontUserService.rejectApply(frontUserBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -266,11 +255,10 @@ public class BackFrontUserManagementController extends BaseController{
      * @param frontUserBO
      */
     private static final void validate(FrontUserBO frontUserBO){
-        Integer lang = frontUserBO.getLang();
-        ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1,lang);
-        ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1,lang);
-        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(),lang,Integer.MAX_VALUE);
-        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(),lang,0);
+        ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1);
+        ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1);
+        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(),Integer.MAX_VALUE);
+        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(),0);
         if(startTime > endTime){
             frontUserBO.setEndTime(Integer.MAX_VALUE);
         }else{

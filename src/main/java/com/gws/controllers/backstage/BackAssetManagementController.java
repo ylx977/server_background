@@ -1,6 +1,7 @@
 package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.BannerDisplayOrder;
+import com.gws.configuration.backstage.UidConfig;
 import com.gws.controllers.BaseApiController;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
@@ -38,7 +39,7 @@ public class BackAssetManagementController extends BaseController{
 
     private final BackAssetManagementService backAssetManagementService;
 
-    @Value(value = "${platform.btyAddress}")
+    @Value(value = "${platform.bty.address}")
     private String platformAddress;
 
     @Autowired
@@ -67,23 +68,21 @@ public class BackAssetManagementController extends BaseController{
          * 2：基本参数校验
          * 3：将前台用户的信息根据所给条件查询出来
          */
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查询前台用户的资产信息",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
-            ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1,lang);
-            ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1,lang);
+            ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1);
+            ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryFrontUserAccount(frontUserBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -105,22 +104,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/topUp/queryFrontUserRecharge")
     public JsonResult queryFrontUserRecharge(@RequestBody FrontUserBO frontUserBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查询前台用户的充币记录",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryFrontUserRecharge(frontUserBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -145,22 +142,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/withdraw/queryFrontUserWithdraw")
     public JsonResult queryFrontUserWithdraw(@RequestBody FrontUserBO frontUserBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查询前台用户提币的申请信息",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryFrontUserWithdraw(frontUserBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -184,22 +179,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/withdraw/queryFrontUserWithdrawHistory")
     public JsonResult queryFrontUserWithdrawHistory(@RequestBody FrontUserBO frontUserBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查询前台用户提币的申请历史信息",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryFrontUserWithdrawHistory(frontUserBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -212,24 +205,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/withdraw/firstPass")
     public JsonResult firstPass(@RequestBody FrontUserBO frontUserBO){
-        Long uid = (Long) request.getAttribute("uid");
-        UserDetailDTO userDetailDTO = (UserDetailDTO) request.getAttribute("userDetailDTO");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},初审同意前台用户的提币申请",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(frontUserBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
-            frontUserBO.setUserDetailDTO(userDetailDTO);
             backAssetManagementService.firstPass(frontUserBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -242,24 +231,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/withdraw/secondPass")
     public JsonResult secondPass(@RequestBody FrontUserBO frontUserBO){
-        Long uid = (Long) request.getAttribute("uid");
-        UserDetailDTO userDetailDTO = (UserDetailDTO) request.getAttribute("userDetailDTO");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},复审同意前台用户的提币申请",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(frontUserBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
-            frontUserBO.setUserDetailDTO(userDetailDTO);
             backAssetManagementService.secondPass(frontUserBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -272,24 +257,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/withdraw/rejectWithdraw")
     public JsonResult rejectWithdraw(@RequestBody FrontUserBO frontUserBO){
-        Long uid = (Long) request.getAttribute("uid");
-        UserDetailDTO userDetailDTO = (UserDetailDTO) request.getAttribute("userDetailDTO");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},拒绝前台用户的提币申请",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(frontUserBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(frontUserBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
-            frontUserBO.setUserDetailDTO(userDetailDTO);
             backAssetManagementService.rejectWithdraw(frontUserBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -314,22 +295,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/exchange/queryExchange")
     public JsonResult queryExchange(@RequestBody FrontUserBO frontUserBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查询平台兑换信息",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
             validate(frontUserBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backAssetManagementService.queryExchange(frontUserBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -343,16 +322,14 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/balance/queryAssetBalance")
     public JsonResult queryAssetBalance(@RequestBody FrontUserBO frontUserBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查询平台的资产余额",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        frontUserBO.setLang(lang);
         try {
             AssetBalanceVO assetBalanceVO = backAssetManagementService.queryAssetBalance();
-            return success(assetBalanceVO,lang);
+            return success(assetBalanceVO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -365,22 +342,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/balance/addUsdg")
     public JsonResult addUsdg(@RequestBody AssetBO assetBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},增加平台usdg总量",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        assetBO.setLang(lang);
         try {
-            ValidationUtil.checkMinAndAssignDouble(assetBO.getGold(),0,lang);
+            ValidationUtil.checkMinAndAssignDouble(assetBO.getGold(),0);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             backAssetManagementService.addUsdg(assetBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -390,10 +365,9 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/balance/queryPlatformAddress")
     public JsonResult queryPlatformAddress(){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查看平台的bty地址",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        return success(platformAddress,lang);
+        return success(platformAddress);
     }
 
     /**
@@ -402,16 +376,14 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/balance/queryAddresses")
     public JsonResult queryAddresses(@RequestBody AssetBO assetBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查看平台地址管理的所有地址",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        assetBO.setLang(lang);
         try {
             List<BtyAddresses> btyAddressesList = backAssetManagementService.queryAddresses();
-            return success(btyAddressesList,lang);
+            return success(btyAddressesList);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -424,22 +396,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/balance/deleteAddress")
     public JsonResult deleteAddresses(@RequestBody AssetBO assetBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},删除平台管理的地址",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        assetBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(assetBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(assetBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             backAssetManagementService.deleteAddresses(assetBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -453,22 +423,21 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/balance/addAddress")
     public JsonResult addAddresses(@RequestBody AssetBO assetBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},添加平台管理的地址",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
         try {
-            ValidationUtil.checkBlankAndAssignString(assetBO.getAddress(),lang);
-            ValidationUtil.checkBlankAndAssignString(assetBO.getTag(),lang);
+            ValidationUtil.checkBlankAndAssignString(assetBO.getAddress());
+            ValidationUtil.checkBlankAndAssignString(assetBO.getTag());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             backAssetManagementService.addAddresses(assetBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -481,22 +450,20 @@ public class BackAssetManagementController extends BaseController{
      */
     @RequestMapping("/balance/setDefaultAddress")
     public JsonResult setDefaultAddress(@RequestBody AssetBO assetBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},设置管理的默认地址",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        assetBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(assetBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(assetBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             backAssetManagementService.setDefaultAddress(assetBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -507,33 +474,31 @@ public class BackAssetManagementController extends BaseController{
      *     "toAddress"------>打的地址
      *     "code"----------->验证码
      *     "amount"--------->提币的数量
-     *     "fee"------------>旷工费
-     *     "note"----------->当前用户的备注信息（选填）
+     *     "fee"------------>旷工费(对于平台来说不需要扣除手续费)
+     *     "coinType"------->usdg=1,bty=2
      * }
      * @return
      */
     @RequestMapping("/balance/withdrawBTY")
     public JsonResult withdrawBTY(@RequestBody AssetBO assetBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.warn("用户:{},进行提币操作",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        assetBO.setLang(lang);
         try {
-            ValidationUtil.checkBlankAndAssignString(assetBO.getToAddress(),lang);
-            ValidationUtil.checkBlankAndAssignString(assetBO.getCode(),lang);
-            ValidationUtil.checkAndAssignDouble(assetBO.getAmount(),lang);
-            ValidationUtil.checkAndAssignDouble(assetBO.getFee(),lang);
+            ValidationUtil.checkBlankAndAssignString(assetBO.getToAddress());
+            ValidationUtil.checkBlankAndAssignString(assetBO.getCode());
+            ValidationUtil.checkRangeAndAssignDouble(assetBO.getAmount(),0d,Double.MAX_VALUE);
+            ValidationUtil.checkRangeAndAssignInt(assetBO.getCoinType(),1,2);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             assetBO.setRequest(request);
             backAssetManagementService.withdrawBTY(assetBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -547,11 +512,10 @@ public class BackAssetManagementController extends BaseController{
      * @param frontUserBO
      */
     private static void validate(FrontUserBO frontUserBO){
-        Integer lang = frontUserBO.getLang();
-        ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1,lang);
-        ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1,lang);
-        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(),lang, 0);
-        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(),lang, Integer.MAX_VALUE);
+        ValidationUtil.checkMinAndAssignInt(frontUserBO.getPage(),1);
+        ValidationUtil.checkMinAndAssignInt(frontUserBO.getRowNum(),1);
+        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getStartTime(), 0);
+        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(frontUserBO.getEndTime(), Integer.MAX_VALUE);
         frontUserBO.setStartTime(startTime);
         if(startTime > endTime){
             frontUserBO.setEndTime(Integer.MAX_VALUE);

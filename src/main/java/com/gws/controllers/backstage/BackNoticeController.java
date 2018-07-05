@@ -1,5 +1,6 @@
 package com.gws.controllers.backstage;
 
+import com.gws.configuration.backstage.UidConfig;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
@@ -52,23 +53,21 @@ public class BackNoticeController extends BaseController{
      */
     @RequestMapping("/queryNotices")
     public JsonResult queryNotices(@RequestBody NoticeBO noticeBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查看后台设置的公告信息",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        noticeBO.setLang(lang);
         try {
-            ValidationUtil.checkMinAndAssignInt(noticeBO.getRowNum(),1,lang);
-            ValidationUtil.checkMinAndAssignInt(noticeBO.getPage(),1,lang);
+            ValidationUtil.checkMinAndAssignInt(noticeBO.getRowNum(),1);
+            ValidationUtil.checkMinAndAssignInt(noticeBO.getPage(),1);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backNoticeService.queryNotices(noticeBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -82,22 +81,20 @@ public class BackNoticeController extends BaseController{
      */
     @RequestMapping("/queryNoticeContent")
     public JsonResult queryNoticeContent(@RequestBody NoticeBO noticeBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查看公告内容",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        noticeBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(noticeBO.getContentId(),lang);
+            ValidationUtil.checkAndAssignLong(noticeBO.getContentId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             NoticeContent noticeContent = backNoticeService.queryNoticeContent(noticeBO);
-            return success(noticeContent,lang);
+            return success(noticeContent);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -113,24 +110,22 @@ public class BackNoticeController extends BaseController{
      */
     @RequestMapping("/updateNotice")
     public JsonResult updateNotice(@RequestBody NoticeBO noticeBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},修改公告内容",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        noticeBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(noticeBO.getContentId(),lang);
-            ValidationUtil.checkBlankString(noticeBO.getNoticeContent(),lang);
-            ValidationUtil.checkBlankString(noticeBO.getTitle(),lang);
+            ValidationUtil.checkAndAssignLong(noticeBO.getContentId());
+            ValidationUtil.checkBlankString(noticeBO.getNoticeContent());
+            ValidationUtil.checkBlankString(noticeBO.getTitle());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             backNoticeService.updateNotice(noticeBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -144,22 +139,20 @@ public class BackNoticeController extends BaseController{
      */
     @RequestMapping("/deleteNotice")
     public JsonResult deleteNotice(@RequestBody NoticeBO noticeBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},删除公告",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        noticeBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(noticeBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(noticeBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             backNoticeService.deleteNotice(noticeBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -174,25 +167,21 @@ public class BackNoticeController extends BaseController{
      */
     @RequestMapping("/publishNotice")
     public JsonResult publishNotice(@RequestBody NoticeBO noticeBO){
-        Long uid = (Long) request.getAttribute("uid");
-        UserDetailDTO userDetailDTO = (UserDetailDTO) request.getAttribute("userDetailDTO");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},新建公告",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        noticeBO.setLang(lang);
         try {
-            ValidationUtil.checkBlankString(noticeBO.getTitle(),lang);
-            ValidationUtil.checkBlankString(noticeBO.getNoticeContent(),lang);
+            ValidationUtil.checkBlankString(noticeBO.getTitle());
+            ValidationUtil.checkBlankString(noticeBO.getNoticeContent());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
-            noticeBO.setUserDetailDTO(userDetailDTO);
             backNoticeService.publishNotice(noticeBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -208,31 +197,23 @@ public class BackNoticeController extends BaseController{
      */
     @RequestMapping("/updateNoticeStatus")
     public JsonResult updateNoticeStatus(@RequestBody NoticeBO noticeBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},修改公告状态",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        noticeBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(noticeBO.getId(),lang);
-            ValidationUtil.checkRangeAndAssignInt(noticeBO.getType(),1,2,lang);
-            ValidationUtil.checkRangeAndAssignInt(noticeBO.getStatus(),0,1,lang);
+            ValidationUtil.checkAndAssignLong(noticeBO.getId());
+            ValidationUtil.checkRangeAndAssignInt(noticeBO.getType(),1,2);
+            ValidationUtil.checkRangeAndAssignInt(noticeBO.getStatus(),0,1);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             backNoticeService.updateNoticeStatus(noticeBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
-
-
-
-
-
-
 
 }

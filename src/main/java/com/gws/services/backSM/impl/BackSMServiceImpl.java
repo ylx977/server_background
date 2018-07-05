@@ -14,6 +14,7 @@ import com.gws.repositories.slave.backstage.BackUserSlave;
 import com.gws.services.backSM.BackSMService;
 import com.gws.utils.IPUtil;
 import com.gws.utils.http.HttpRequest;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.redis.RedisUtil;
 import com.gws.utils.webservice.HashUtil;
 import org.slf4j.Logger;
@@ -45,6 +46,9 @@ public class BackSMServiceImpl implements BackSMService{
     @Autowired
     private RedisUtil redisUtil;
 
+    @Autowired
+    private HttpServletRequest request;
+
     @Value("${fzmsm.appKey}")
     private String appKey;
     @Value("${fzmsm.appSecret}")
@@ -71,8 +75,6 @@ public class BackSMServiceImpl implements BackSMService{
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateBackUserStatus(BackUserBO backUserBO) {
-        HttpServletRequest request = backUserBO.getRequest();
-        Integer lang = backUserBO.getLang();
         String username = backUserBO.getUsername();
         String phone = backUserBO.getPhone();
         String code = backUserBO.getCode();
@@ -85,7 +87,7 @@ public class BackSMServiceImpl implements BackSMService{
         BackUser one = backUserSlave.findOne(backUsersQuery);
         if(one == null){
             LOGGER.error("用户的用户名和联系方式(username & contact)不能匹配数据库用户信息");
-            ExceptionUtils.throwException(ErrorMsg.USER_AND_CONTACT_NOT_FOUNT,lang);
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.USER_AND_CONTACT_NOT_FOUNT));
         }
 
         //**************************短信验证模块***************************
@@ -101,7 +103,7 @@ public class BackSMServiceImpl implements BackSMService{
         if(!resultCode.equals(200)){
             String message = smResult.getMessage();
             String error = smResult.getError();
-            ExceptionUtils.throwException(ErrorMsg.SM_ERROR,lang,error+","+message);
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.SM_ERROR)+error+","+message);
         }
         //**************************短信验证模块***************************
 
@@ -112,7 +114,8 @@ public class BackSMServiceImpl implements BackSMService{
         backUser.setIsFreezed(isFreezed);
         int success = backUserMaster.updateById(backUser, uid, "isFreezed");
         if(success == 0){
-            ExceptionUtils.throwException(ErrorMsg.UPDATE_USER_INFO_FAIL,lang);
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_USER_INFO_FAIL));
+
         }
 
         //**************************删除该用户的redis缓存信息***************************

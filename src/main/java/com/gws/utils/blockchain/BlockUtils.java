@@ -69,7 +69,7 @@ public class BlockUtils {
         Map<String,Object> map = JSON.parseObject(jsonData,Map.class);	//总的map
         String error = map.get("error").toString();
         if(!StringUtils.isEmpty(error)){
-            return error+"(区块链请求发生异常)";
+            return error+"(blockchain request error)";
         }
         //得到第一个code的值(如果第一个有值就取第一个，如果第一个没有值取第二个)
         String result = map.get("result").toString();	//得到result节点
@@ -81,9 +81,9 @@ public class BlockUtils {
             String deliver_tx = resultMap.get("deliver_tx").toString();
             Map<String,Object> deliver_txMap = JSON.parseObject(deliver_tx,Map.class);
             String data2 = deliver_txMap.get("data").toString();
-            return HexStringUtil.hexStringToString(data2)+"(区块链错误)";
+            return HexStringUtil.hexStringToString(data2)+"(blockchain error)";
         }
-        return HexStringUtil.hexStringToString(data)+"(区块链错误)";
+        return HexStringUtil.hexStringToString(data)+"(blockchain error)";
     }
 
 }

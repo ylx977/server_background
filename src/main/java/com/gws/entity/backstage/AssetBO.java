@@ -31,6 +31,8 @@ public class AssetBO {
 
     private String code;
 
+    private Integer coinType;
+
     /**
      * 前台用户提供的备注信息
      */

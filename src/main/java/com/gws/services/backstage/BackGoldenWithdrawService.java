@@ -55,4 +55,16 @@ public interface BackGoldenWithdrawService {
      * @param goldenWithdrawBO
      */
     void dealWithOverdues(GoldenWithdrawBO goldenWithdrawBO);
+
+    /**
+     * 获取超过提取时间，但是后台迟迟未处理的订单
+     * @return
+     */
+    List<GoldenWithdraw> queryAllOverduesUnhandled();
+
+    /**
+     * 后台迟迟未处理的订单[那些状态是申请中的单子，将冻结金额还回用户，同时状态改成提取失败]
+     * @param goldenWithdrawBO
+     */
+    void dealWithOverduesUnhandled(GoldenWithdrawBO goldenWithdrawBO);
 }

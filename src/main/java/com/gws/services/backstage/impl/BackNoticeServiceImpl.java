@@ -1,10 +1,13 @@
 package com.gws.services.backstage.impl;
 
+import com.gws.common.constants.backstage.ErrorMsg;
+import com.gws.common.constants.backstage.RedisConfig;
+import com.gws.configuration.backstage.UserInfoConfig;
 import com.gws.dto.backstage.PageDTO;
-import com.gws.dto.backstage.UserDetailDTO;
 import com.gws.entity.backstage.Notice;
 import com.gws.entity.backstage.NoticeBO;
 import com.gws.entity.backstage.NoticeContent;
+import com.gws.entity.backstage.ProblemContent;
 import com.gws.repositories.master.backstage.BackNoticeContentMaster;
 import com.gws.repositories.master.backstage.BackNoticeMaster;
 import com.gws.repositories.query.backstage.NoticeQuery;
@@ -12,7 +15,8 @@ import com.gws.repositories.slave.backstage.BackNoticeContentSlave;
 import com.gws.repositories.slave.backstage.BackNoticeSlave;
 import com.gws.services.backstage.BackNoticeService;
 import com.gws.utils.cache.IdGlobalGenerator;
-import org.aspectj.weaver.ast.Not;
+import com.gws.utils.http.LangReadUtil;
+import com.gws.utils.redis.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,13 +46,16 @@ public class BackNoticeServiceImpl implements BackNoticeService {
 
     private final IdGlobalGenerator idGlobalGenerator;
 
+    private final RedisUtil redisUtil;
+
     @Autowired
-    public BackNoticeServiceImpl(BackNoticeSlave backNoticeSlave, BackNoticeMaster backNoticeMaster, BackNoticeContentSlave backNoticeContentSlave, BackNoticeContentMaster backNoticeContentMaster, IdGlobalGenerator idGlobalGenerator) {
+    public BackNoticeServiceImpl(BackNoticeSlave backNoticeSlave, BackNoticeMaster backNoticeMaster, BackNoticeContentSlave backNoticeContentSlave, BackNoticeContentMaster backNoticeContentMaster, IdGlobalGenerator idGlobalGenerator, RedisUtil redisUtil) {
         this.backNoticeSlave = backNoticeSlave;
         this.backNoticeMaster = backNoticeMaster;
         this.backNoticeContentSlave = backNoticeContentSlave;
         this.backNoticeContentMaster = backNoticeContentMaster;
         this.idGlobalGenerator = idGlobalGenerator;
+        this.redisUtil = redisUtil;
     }
 
     @Override
@@ -83,8 +90,22 @@ public class BackNoticeServiceImpl implements BackNoticeService {
     @Override
     public NoticeContent queryNoticeContent(NoticeBO noticeBO) {
         Long contentId = noticeBO.getContentId();
-        NoticeContent one = backNoticeContentSlave.findOne(contentId);
-        return one;
+
+        //先去缓存拿数据
+        Object content = redisUtil.get(RedisConfig.NOTICE_CONTENT + contentId);
+        if(content!=null){
+            NoticeContent noticeContent = new NoticeContent();
+            noticeContent.setId(contentId);
+            noticeContent.setContent(content.toString());
+            return noticeContent;
+        }else{
+            NoticeContent one = backNoticeContentSlave.findOne(contentId);
+
+            //将缓存存入
+            redisUtil.set(RedisConfig.NOTICE_CONTENT + contentId,one.getContent());
+
+            return one;
+        }
     }
 
     @Override
@@ -99,15 +120,19 @@ public class BackNoticeServiceImpl implements BackNoticeService {
 
         int success = backNoticeContentMaster.updateById(noticeContent, contentId,"content");
         if(success == 0){
-            throw new RuntimeException("更新公告内容失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_NOTIC_FAIL));
         }
 
         Notice notice = new Notice();
         notice.setTitle(title);
         int success2 = backNoticeMaster.updateById(notice, contentId,"title");
         if(success2 == 0){
-            throw new RuntimeException("更新公告列表失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_NOTIC_LIST_FAIL));
         }
+
+        //删缓存
+        redisUtil.delete(RedisConfig.NOTICE_CONTENT+contentId);
+
     }
 
     @Override
@@ -119,8 +144,11 @@ public class BackNoticeServiceImpl implements BackNoticeService {
         notice.setDeleted(0);
         int success = backNoticeMaster.updateById(notice, id, "deleted");
         if(success == 0){
-            throw new RuntimeException("公告删除失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.DELETE_NOTIC_FAIL));
         }
+
+        //删缓存
+        redisUtil.delete(RedisConfig.NOTICE_CONTENT+id);
     }
 
     @Override
@@ -129,9 +157,6 @@ public class BackNoticeServiceImpl implements BackNoticeService {
         Long id = idGlobalGenerator.getSeqId(NoticeContent.class);
         String content = noticeBO.getNoticeContent();
         String title = noticeBO.getTitle();
-        UserDetailDTO userDetailDTO = noticeBO.getUserDetailDTO();
-        Long uid = userDetailDTO.getUid();
-        String author = userDetailDTO.getPersonName();
 
         NoticeContent noticeContent = new NoticeContent();
         noticeContent.setId(id);
@@ -142,10 +167,10 @@ public class BackNoticeServiceImpl implements BackNoticeService {
         notice.setId(id);
         notice.setTitle(title);
         notice.setDeleted(1);
-        notice.setAuthor(author);
+        notice.setAuthor(UserInfoConfig.getUserInfo().getPersonName());//从threadlocal拿
         notice.setShow(1);
         notice.setTop(0);
-        notice.setUid(uid);
+        notice.setUid(UserInfoConfig.getUserInfo().getUid());//从threadlocal拿
         backNoticeMaster.save(notice);
     }
 
@@ -164,7 +189,7 @@ public class BackNoticeServiceImpl implements BackNoticeService {
             notice.setUtime(currentTime);
             int success = backNoticeMaster.updateById(notice, id, "top","utime");
             if(success==0){
-                throw new RuntimeException("更新置顶状态失败");
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_NOTICE_TOP_FAIL));
             }
         }
 
@@ -175,7 +200,7 @@ public class BackNoticeServiceImpl implements BackNoticeService {
             notice.setUtime(currentTime);
             int success = backNoticeMaster.updateById(notice,id,"show","utime");
             if(success==0){
-                throw new RuntimeException("更新显示状态失败");
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_NOTICE_SHOW_FAIL));
             }
         }
     }

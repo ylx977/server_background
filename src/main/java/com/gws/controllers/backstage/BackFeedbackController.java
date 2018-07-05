@@ -1,5 +1,6 @@
 package com.gws.controllers.backstage;
 
+import com.gws.configuration.backstage.UidConfig;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.dto.backstage.PageDTO;
@@ -50,22 +51,20 @@ public class BackFeedbackController extends BaseController{
      */
     @RequestMapping(value = "/queryFeedbacks")
     public JsonResult queryFeedbacks(@RequestBody FeedbackBO feedbackBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},修改后台banner基本配置信息",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        feedbackBO.setLang(lang);
         try {
             validate(feedbackBO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backFeedbackService.queryFeedbacks(feedbackBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -75,12 +74,11 @@ public class BackFeedbackController extends BaseController{
      * @param feedbackBO
      */
     private static final void validate(FeedbackBO feedbackBO){
-        Integer lang = feedbackBO.getLang();
-        ValidationUtil.checkMinAndAssignInt(feedbackBO.getRowNum(),1,lang);
-        ValidationUtil.checkMinAndAssignInt(feedbackBO.getPage(),1,lang);
+        ValidationUtil.checkMinAndAssignInt(feedbackBO.getRowNum(),1);
+        ValidationUtil.checkMinAndAssignInt(feedbackBO.getPage(),1);
 //        ValidationUtil.checkRangeAndAssignInt(feedbackBO.getProblemType(),1,8,lang);
-        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getEndTime(),lang,Integer.MAX_VALUE);
-        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getStartTime(),lang,0);
+        Integer endTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getEndTime(),Integer.MAX_VALUE);
+        Integer startTime = ValidationUtil.checkAndAssignDefaultInt(feedbackBO.getStartTime(),0);
         if(startTime > endTime){
             feedbackBO.setEndTime(Integer.MAX_VALUE);
         }else{

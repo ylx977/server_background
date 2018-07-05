@@ -2,24 +2,32 @@ package com.gws.services.backstage.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.gws.common.constants.backstage.BackAuthesEnum;
+import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.common.constants.backstage.RedisConfig;
 import com.gws.common.constants.backstage.Roles;
+import com.gws.configuration.backstage.UidConfig;
+import com.gws.configuration.backstage.UserInfoConfig;
 import com.gws.dto.backstage.BackAuthgroupsVO;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.dto.backstage.UserDetailDTO;
 import com.gws.entity.backstage.*;
+import com.gws.exception.ExceptionUtils;
 import com.gws.repositories.master.backstage.*;
 import com.gws.repositories.query.backstage.*;
 import com.gws.repositories.slave.backstage.*;
 import com.gws.services.backstage.BackUserService;
 import com.gws.utils.cache.IdGlobalGenerator;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.redis.RedisUtil;
+import com.gws.utils.token.TokenUtil;
+import com.gws.utils.webservice.HashUtil;
 import org.hibernate.internal.QueryImpl;
 import org.omg.CORBA.PRIVATE_MEMBER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -74,6 +82,9 @@ public class BackUserServiceImpl implements BackUserService {
 
     private final RedisUtil redisUtil;
 
+    @Value("${backuser.steven.phonenumber}")
+    private String stevenContact;
+
     @PersistenceContext
     private EntityManager em;
 
@@ -114,7 +125,7 @@ public class BackUserServiceImpl implements BackUserService {
         //查询uid对应的所有authgroupId
         List<BackUsersAuthgroups> backUsersAuthgroupsList = backUsersAuthgroupsSlave.findAll(backUsersAuthgroupsQuery);
         if(backUsersAuthgroupsList.size() == 0){
-            throw new RuntimeException("用户无权操作");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NO_AUTH));
         }
         List<Long> authgroupIds = new ArrayList<>();
         for (BackUsersAuthgroups backUsersAuthgroups : backUsersAuthgroupsList){
@@ -134,7 +145,7 @@ public class BackUserServiceImpl implements BackUserService {
         backAuthgroupsAuthesQuery.setAuthgroupIds(authgroupIds);
         List<BackAuthgroupsAuthes> backAuthgroupsAuthesList = backAuthgroupsAuthesSlave.findAll(backAuthgroupsAuthesQuery);
         if(backAuthgroupsAuthesList.size() == 0){
-            throw new RuntimeException("用户无权操作");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NO_AUTH));
         }
         List<Long> authIds = new ArrayList<>();
         for (BackAuthgroupsAuthes backAuthgroupsAuthes: backAuthgroupsAuthesList) {
@@ -150,7 +161,7 @@ public class BackUserServiceImpl implements BackUserService {
         }
         userDetailDTO.setAuthUrl(authUrls);
         if(!authUrls.contains(authUrl)){
-            throw new RuntimeException("用户无权操作");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NO_AUTH));
         }
         return userDetailDTO;
     }
@@ -161,7 +172,7 @@ public class BackUserServiceImpl implements BackUserService {
      */
     private void deleteUserRredisInfo(Long... uids){
         if(uids.length == 0){
-            throw new RuntimeException("redis删除时必须传入uid信息");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.REDIS_DELETE_UID));
         }
         for(long uid : uids){
             //去redis将用户的信息删除掉
@@ -192,7 +203,7 @@ public class BackUserServiceImpl implements BackUserService {
             UserDetailDTO userDetailDTO = JSON.parseObject(redisAuthority, UserDetailDTO.class);
             List<String> authUrls = userDetailDTO.getAuthUrl();
             if(!authUrls.contains(authUrl)){
-                throw new RuntimeException("用户无权操作");
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NO_AUTH));
             }
             return userDetailDTO;
         }
@@ -224,7 +235,7 @@ public class BackUserServiceImpl implements BackUserService {
         }
         System.out.println("去redis获取tokne信息："+redisToken);
         if(StringUtils.isEmpty(redisToken)){
-            throw new RuntimeException("token信息超时，请重新登录");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.TOKEN_TIMEOUT));
         }
         if(!redisToken.equals(token)){
             return false;
@@ -236,6 +247,10 @@ public class BackUserServiceImpl implements BackUserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveUser(BackUserBO backUserBO) {
+
+        //对密码进行加密处理
+        backUserBO.setPassword(HashUtil.hashPwd(backUserBO.getPassword()));
+
         BackUsersQuery backUsersQuery = new BackUsersQuery();
         backUsersQuery.setUsername(backUserBO.getUsername());
         //在非删除用户中选择
@@ -243,14 +258,14 @@ public class BackUserServiceImpl implements BackUserService {
         //查询用户名是否重复
         List<BackUser> backUserList1 = backUserSlave.findAll(backUsersQuery);
         if(backUserList1.size() > 0){
-            throw new RuntimeException("用户名重复");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.DUPLICATE_USERNAME));
         }
         backUsersQuery.setUsername(null);
         backUsersQuery.setContact(backUserBO.getContact());
         //查询联系方式是否重名
         List<BackUser> backUserList2 = backUserSlave.findAll(backUsersQuery);
         if(backUserList2.size() > 0){
-            throw new RuntimeException("联系方式重复");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.DUPLICATE_CONTACT));
         }
         BackUser backUser = new BackUser();
         BeanUtils.copyProperties(backUserBO,backUser);
@@ -263,7 +278,7 @@ public class BackUserServiceImpl implements BackUserService {
     @Override
     public PageDTO queryUserInfo(BackUserBO backUserBO) {
 
-        Long uid = backUserBO.getOperatorUid();
+        Long uid = UidConfig.getUid();
 
         BackUsersQuery backUsersQuery = new BackUsersQuery();
         if(!StringUtils.isEmpty(backUserBO.getUsername())){
@@ -306,7 +321,7 @@ public class BackUserServiceImpl implements BackUserService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteUsers(BackUserBO backUserBO) {
         //操作人uid
-        Long operatorUid = backUserBO.getOperatorUid();
+        Long operatorUid = UidConfig.getUid();
 
         //被删除的uids
         List<Long> uids = backUserBO.getUids();
@@ -317,7 +332,7 @@ public class BackUserServiceImpl implements BackUserService {
             List<Long> resultList = (List<Long>) query.getResultList();
             for(Long uid : resultList){
                 if(uids.contains(uid)){
-                    throw new RuntimeException("不能删除同级别的管理员用户");
+                    throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CANT_DELETE_ADMIN_ACCOUNT));
                 }
             }
         }
@@ -336,9 +351,8 @@ public class BackUserServiceImpl implements BackUserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateUsers(BackUserBO backUserBO) {
-
         //当前操作人的uid
-        Long operatorUid = backUserBO.getOperatorUid();
+        Long operatorUid = UidConfig.getUid();
 
         //被修改用户的uid
         long uid = backUserBO.getUid();
@@ -348,7 +362,7 @@ public class BackUserServiceImpl implements BackUserService {
             Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1,2)");
             List<Long> resultList = (List<Long>) query.getResultList();
             if(resultList.contains(uid)){
-                throw new RuntimeException("不能修改同级别的管理员用户");
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CANT_UPDATE_ADMIN_ACCOUNT));
             }
         }
 
@@ -359,14 +373,14 @@ public class BackUserServiceImpl implements BackUserService {
         //查询用户名是否重复
         List<BackUser> backUserList1 = backUserSlave.findAll(backUsersQuery);
         if(backUserList1.size() > 0){
-            throw new RuntimeException("用户名重复");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.DUPLICATE_USERNAME));
         }
         backUsersQuery.setUsername(null);
         backUsersQuery.setContact(backUserBO.getContact());
         //查询联系方式是否重名(排除被修改者本身)
         List<BackUser> backUserList2 = backUserSlave.findAll(backUsersQuery);
         if(backUserList2.size() > 0){
-            throw new RuntimeException("联系方式重复");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.DUPLICATE_CONTACT));
         }
         BackUser backUser = new BackUser();
         BeanUtils.copyProperties(backUserBO,backUser);
@@ -390,9 +404,10 @@ public class BackUserServiceImpl implements BackUserService {
         //超级管理员的id为1
         backUser.setUid(1L);
         backUser.setUsername(username);
-        backUser.setPassword(password);
+        backUser.setPassword(HashUtil.hashPwd(password));
         backUser.setPersonName(Roles.SUPER_ADMIN);
-        backUser.setContact("-");
+        //todo 插入steven的联系方式
+        backUser.setContact(stevenContact);
         backUser.setIsDelete(1);
         backUser.setIsFreezed(1);
         backUserMaster.save(backUser);
@@ -461,7 +476,7 @@ public class BackUserServiceImpl implements BackUserService {
         userDetailDTO.setRoleName(Arrays.asList(Roles.SUPER_ADMIN));
         userDetailDTO.setAuthUrl(BackAuthesEnum.AUTH_URLS);
         userDetailDTO.setAuthName(BackAuthesEnum.AUTH_NAMES);
-        userDetailDTO.setTokenId("Bearer"+token+"&"+1);
+        userDetailDTO.setTokenId(TokenUtil.packTokne(token,1L));
         return userDetailDTO;
     }
 
@@ -470,7 +485,8 @@ public class BackUserServiceImpl implements BackUserService {
         UserDetailDTO userDetailDTO = new UserDetailDTO();
         BackUsersQuery backUsersQuery = new BackUsersQuery();
         backUsersQuery.setUsername(username);
-        backUsersQuery.setPassword(password);
+        backUsersQuery.setPassword(HashUtil.hashPwd(password));
+        backUsersQuery.setIsDelete(1);
         BackUser backUser = backUserSlave.findOne(backUsersQuery);
         //如果查无此账号，直接返回空
         if(backUser==null){
@@ -604,9 +620,8 @@ public class BackUserServiceImpl implements BackUserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void assignRoles4Account(BackUserBO backUserBO) {
-
         //当前操作人的uid
-        Long operatorUid = backUserBO.getOperatorUid();
+        Long operatorUid = UidConfig.getUid();
 
         //被操作人的uid
         Long uid = backUserBO.getUid();
@@ -616,7 +631,7 @@ public class BackUserServiceImpl implements BackUserService {
             Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1,2)");
             List<Long> resultList = (List<Long>) query.getResultList();
             if(resultList.contains(uid)){
-                throw new RuntimeException("不能分配同级别的管理员用户的角色信息");
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CANT_ASSIGN_ADMIN_ROLE));
             }
         }
 
@@ -648,12 +663,13 @@ public class BackUserServiceImpl implements BackUserService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void modifyPassword(BackUserBO backUserBO) {
-        UserDetailDTO userDetailDTO = backUserBO.getUserDetailDTO();
-        String username = userDetailDTO.getUsername();//用来删缓存的
-        Long uid = backUserBO.getUid();
+        //用来删缓存的
+        String username = UserInfoConfig.getUserInfo().getUsername();
+        Long uid = UidConfig.getUid();
+
         String newPassword = backUserBO.getNewPassword();
         BackUser backUser = new BackUser();
-        backUser.setPassword(newPassword);
+        backUser.setPassword(HashUtil.hashPwd(newPassword));
         backUserMaster.updateById(backUser,uid,"password");
 
         //*************************删除用户的缓存信息***************************
@@ -673,7 +689,7 @@ public class BackUserServiceImpl implements BackUserService {
         Integer isFreezed = backUserBO.getIsFreezed();
 
         //操作人id
-        Long operatorUid = backUserBO.getOperatorUid();
+        Long operatorUid = UidConfig.getUid();
 
         if(!operatorUid.equals(1L)){
             //如果是超级管理员除了自己的信息不能看到其他人都能看到
@@ -681,7 +697,7 @@ public class BackUserServiceImpl implements BackUserService {
             List<Long> resultList = (List<Long>) query.getResultList();
             for(Long uid : resultList){
                 if(uids.contains(uid)){
-                    throw new RuntimeException("不能修改同级别的管理员用户的状态");
+                    throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CANT_UPDATE_ADMIN_STATUS));
                 }
             }
         }

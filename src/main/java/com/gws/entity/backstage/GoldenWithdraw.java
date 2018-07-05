@@ -46,4 +46,13 @@ public class GoldenWithdraw {
 
     @Column(name = "withdraw_time")
     private Integer withdrawTime;
+
+    @Column(name = "fee")
+    private Double fee;
+
+    @Column(name = "total")
+    private Double total;
+
+    @Column(name = "hash")
+    private String hash;
 }

@@ -1,5 +1,7 @@
 package com.gws.services.backstage;
 
+import com.gws.dto.backstage.PageDTO;
+import com.gws.entity.backstage.MarketPrice;
 import com.gws.entity.backstage.MarketPriceBO;
 
 /**
@@ -11,4 +13,18 @@ public interface BackMarketPriceService {
      * @param marketPriceBO
      */
     void updatePrice(MarketPriceBO marketPriceBO);
+
+    /**
+     * 查询平台历史报价信息
+     * @param marketPriceBO
+     * @return
+     */
+    PageDTO queryPriceHistory(MarketPriceBO marketPriceBO);
+
+    /**
+     * 用于回显平台报价信息
+     * @param marketPriceBO
+     * @return
+     */
+    MarketPrice queryPrice(MarketPriceBO marketPriceBO);
 }

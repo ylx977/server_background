@@ -10,6 +10,9 @@ import com.gws.utils.eddsa.spec.EdDSANamedCurveTable;
 import com.gws.utils.eddsa.spec.EdDSAPrivateKeySpec;
 import com.gws.utils.http.ConfReadUtil;
 import com.gws.utils.http.HttpRequest;
+import com.gws.utils.wallet.utils.Bip32Util;
+import com.gws.utils.wallet.utils.Bip39Util;
+import com.gws.utils.wallet.utils.Sign;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -48,6 +51,7 @@ public class CreateTXUtils {
         rawTX.setTokenSymbol(tokenSymbol);
         RequestBean requestBean = new RequestBean(rawTX,"Chain33.CreateRawTransaction",1);//这里的id是写死的，都是1
         String requestBeanJson = JSON.toJSONString(requestBean);
+        System.out.println(requestBeanJson);
         String result = HttpRequest.sendPost(outerurl,requestBeanJson);
         return result;
     }
@@ -74,30 +78,15 @@ public class CreateTXUtils {
     }
 
 
-
+    /**
+     * 对滨江第一个返回的接口数据进行签名
+     * @param unsigntx
+     * @param operatorPriKey
+     * @return
+     */
     public static final String getSign(String unsigntx,String operatorPriKey){
-        try {
-            byte[] sourceDataBytes = HexUtil.hexString2Bytes(unsigntx);
-            //todo 对元数据进行进行加密
-            EdDSANamedCurveSpec spec = EdDSANamedCurveTable.getByName("Ed25519");
-            //就是SHA-512
-            EdDSAEngine edDSAEngine = new EdDSAEngine(MessageDigest.getInstance(spec.getHashAlgorithm()));
-            //私钥转成byte数组
-            byte[] bytePrivateKey = HexUtil.hexString2Bytes(operatorPriKey);
-
-            EdDSAPrivateKeySpec privKey = new EdDSAPrivateKeySpec(bytePrivateKey, spec);
-            PrivateKey privateKey = new EdDSAPrivateKey(privKey);
-            edDSAEngine.initSign(privateKey);
-            edDSAEngine.update(sourceDataBytes);
-
-            //元数据经过私钥加密过后的byte数组类型的签名数据
-            byte[] sign = edDSAEngine.sign();
-
-            String hexSign = HexUtil.bytes2HexString(sign);
-            return hexSign;
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
+//        return Bip32Util.sign(unsigntx,operatorPriKey);
+        return Bip39Util.sign(unsigntx,operatorPriKey);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.ErrorMsg;
+import com.gws.configuration.backstage.UidConfig;
 import com.gws.controllers.BaseApiController;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
@@ -10,6 +11,7 @@ import com.gws.entity.backstage.GoldenWithdrawBO;
 import com.gws.enums.SystemCode;
 import com.gws.exception.ExceptionUtils;
 import com.gws.services.backstage.BackGoldenWithdrawService;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.validate.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,30 +64,28 @@ public class BackGoldenWithdrawController extends BaseController{
          * 2：基本参数校验
          * 3：将满足条件的数据信息，分页展示在页面
          */
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},后台用户查看黄金提取记录",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        goldenWithdrawBO.setLang(lang);
         try {
-            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getEndTime(),lang,Integer.MAX_VALUE);
-            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getStartTime(),lang,0);
+            Integer endTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getEndTime(),Integer.MAX_VALUE);
+            Integer startTime = ValidationUtil.checkAndAssignDefaultInt(goldenWithdrawBO.getStartTime(),0);
             if(startTime > endTime){
                 goldenWithdrawBO.setEndTime(Integer.MAX_VALUE);
             }else{
                 goldenWithdrawBO.setEndTime(endTime);
             }
-            ValidationUtil.checkMinAndAssignInt(goldenWithdrawBO.getRowNum(),1,lang);
-            ValidationUtil.checkMinAndAssignInt(goldenWithdrawBO.getPage(),1,lang);
+            ValidationUtil.checkMinAndAssignInt(goldenWithdrawBO.getRowNum(),1);
+            ValidationUtil.checkMinAndAssignInt(goldenWithdrawBO.getPage(),1);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             PageDTO pageDTO = backGoldenWithdrawService.queryGoldenWithdrawInfo(goldenWithdrawBO);
-            return success(pageDTO,lang);
+            return success(pageDTO);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -107,29 +107,27 @@ public class BackGoldenWithdrawController extends BaseController{
          * 5：检查该提款记录的状态是否符合录入黄金编号的条件
          * 6：将编号插入到该用户的提款记录中，然后将状态改成【待提取中】，还要将提款时间也插入到数据库中，确保到时候取款时间是否已经超时
          */
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},录入黄金编号",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        goldenWithdrawBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(goldenWithdrawBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(goldenWithdrawBO.getId());
             List<String> goldenCodes = goldenWithdrawBO.getGoldenCodes();
             if(goldenCodes.size() == 0){
-                ExceptionUtils.throwException(ErrorMsg.INPUT_GOLD_CODE,lang);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.INPUT_GOLD_CODE));
             }
             for (String goldenCode : goldenCodes) {
-                ValidationUtil.checkBlankAndAssignString(goldenCode,lang);
+                ValidationUtil.checkBlankAndAssignString(goldenCode);
             }
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             backGoldenWithdrawService.insertGoldenCode(goldenWithdrawBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -144,57 +142,21 @@ public class BackGoldenWithdrawController extends BaseController{
      */
     @RequestMapping("/queryGoldenCode")
     public JsonResult queryGoldenCode(@RequestBody GoldenWithdrawBO goldenWithdrawBO){
-        Long uid = (Long) request.getAttribute("uid");
+        Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},查询黄金编号",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        goldenWithdrawBO.setLang(lang);
         try {
-            ValidationUtil.checkAndAssignLong(goldenWithdrawBO.getId(),lang);
+            ValidationUtil.checkAndAssignLong(goldenWithdrawBO.getId());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             List<BackGoldenCode> backGoldenCodeList = backGoldenWithdrawService.queryGoldenCode(goldenWithdrawBO);
-            return success(backGoldenCodeList,lang);
+            return success(backGoldenCodeList);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
-
-
-    /**
-     * 确认出库
-     * {
-     *     "id"
-     * }
-     * @return
-     */
-//    @RequestMapping("/confirmCheckout")
-//    public JsonResult confirmCheckout(@RequestBody GoldenWithdrawBO goldenWithdrawBO){
-//        /*
-//         * 1：前台传入uid
-//         * 2：基本参数校验
-//         * 3：检查uid下是否有这个提款记录的id
-//         * 5：检查该提款记录的状态是否符合录入黄金编号的条件
-//         * 6：将编号插入到该用户的提款记录中，然后将状态改成【待提取中】，还要将提款时间也插入到数据库中，确保到时候取款时间是否已经超时
-//         */
-//        Long uid = (Long) request.getAttribute("uid");
-//        LOGGER.info("用户:{},确认黄金出库",uid);
-//        try {
-//            ValidationUtil.checkAndAssignLong(goldenWithdrawBO.getId());
-//        }catch (Exception e){
-//            LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-//            return new JsonResult(SystemCode.VALIDATION_ERROR.getCode(), SystemCode.VALIDATION_ERROR.getMessage()+":"+e.getMessage(), null);
-//        }
-//        try {
-//            backGoldenWithdrawService.confirmCheckout(goldenWithdrawBO);
-//            return success(null);
-//        }catch (Exception e){
-//            LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-//            return new JsonResult(SystemCode.SYS_ERROR.getCode(), SystemCode.SYS_ERROR.getMessage()+":"+e.getMessage(), null);
-//        }
-//    }
 
 }

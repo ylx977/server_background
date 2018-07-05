@@ -51,4 +51,34 @@ public class RedisConfig {
      */
     public static final String BANNER_BASIC_CONFIG = "BANNER_BAISC_CONFIG";
 
+    /**
+     * 用于存放市价信息的
+     */
+    public static final String MARKET_PRICE = "MARKET_PRICE";
+
+    /**
+     * 公告内容
+     */
+    public static final String NOTICE_CONTENT = "NOTICE_CONTENT";
+
+    /**
+     * 常见问题内容
+     */
+    public static final String PROBLEM_CONTENT = "PROBLEM_CONTENT";
+
+    /**
+     * 比特元和USDG之间的交易费
+     */
+    public static final String BTY_COIN_FEE = "BTY_COIN_FEE";
+
+    /**
+     * 不同币的提币费
+     */
+    public static final String COIN_DRAW_FEE = "COIN_DRAW_FEE";
+
+    /**
+     * 不同黄金提取的提币费
+     */
+    public static final String GOLD_DRAW_FEE = "GOLD_DRAW_FEE";
+
 }

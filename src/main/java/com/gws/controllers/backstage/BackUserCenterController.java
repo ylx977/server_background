@@ -2,6 +2,8 @@ package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.common.constants.backstage.RegexConstant;
+import com.gws.configuration.backstage.UidConfig;
+import com.gws.configuration.backstage.UserInfoConfig;
 import com.gws.controllers.BaseApiController;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
@@ -10,7 +12,9 @@ import com.gws.entity.backstage.BackUserBO;
 import com.gws.enums.SystemCode;
 import com.gws.exception.ExceptionUtils;
 import com.gws.services.backstage.BackUserService;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.validate.ValidationUtil;
+import com.gws.utils.webservice.HashUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,37 +59,34 @@ public class BackUserCenterController extends BaseController{
          * 2：基本参数校验
          * 3：修改后台用户的账号密码
          */
-        Long uid = (Long) request.getAttribute("uid");
-        UserDetailDTO userDetailDTO = (UserDetailDTO) request.getAttribute("userDetailDTO");
+        Long uid = UidConfig.getUid();
+        UserDetailDTO userDetailDTO = UserInfoConfig.getUserInfo();
         LOGGER.info("用户:{},后台用户修改自己密码",uid);
-        Integer lang = (Integer) request.getAttribute("lang");
-        backUserBO.setLang(lang);
         try {
             String password = userDetailDTO.getPassword();
-            String originalPassword = ValidationUtil.checkBlankAndAssignString(backUserBO.getOriginalPassword(),lang, RegexConstant.PWD_REGEX);
-            String newPassword = ValidationUtil.checkBlankAndAssignString(backUserBO.getNewPassword(),lang, RegexConstant.PWD_REGEX);
-            String newConfirmedPassword = ValidationUtil.checkBlankAndAssignString(backUserBO.getNewConfirmedPassword(),lang, RegexConstant.PWD_REGEX);
-            if(!password.equals(originalPassword)){
-                ExceptionUtils.throwException(ErrorMsg.WRONG_PASSWORD,lang);
+            String originalPassword = ValidationUtil.checkBlankAndAssignString(backUserBO.getOriginalPassword(), RegexConstant.PWD_REGEX);
+            String newPassword = ValidationUtil.checkBlankAndAssignString(backUserBO.getNewPassword(), RegexConstant.PWD_REGEX);
+            String newConfirmedPassword = ValidationUtil.checkBlankAndAssignString(backUserBO.getNewConfirmedPassword(), RegexConstant.PWD_REGEX);
+            if(!password.equals(HashUtil.hashPwd(originalPassword))){
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_PASSWORD));
             }
             if(!newPassword.equals(newConfirmedPassword)){
-                ExceptionUtils.throwException(ErrorMsg.PASSWORD_INCONSISTENT,lang);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.PASSWORD_INCONSISTENT));
             }
             if(password.equals(newPassword)){
-                ExceptionUtils.throwException(ErrorMsg.SAME_PASSWORD,lang);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.SAME_PASSWORD));
             }
             backUserBO.setUid(uid);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
-            backUserBO.setUserDetailDTO(userDetailDTO);
             backUserService.modifyPassword(backUserBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->操作失败",uid,e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 

@@ -1,10 +1,8 @@
 package com.gws.services.backstage.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.gws.common.constants.backstage.CoinType;
-import com.gws.common.constants.backstage.CoinWithdrawStatusEnum;
-import com.gws.common.constants.backstage.ErrorMsg;
-import com.gws.common.constants.backstage.SymbolId;
+import com.gws.common.constants.backstage.*;
+import com.gws.configuration.backstage.UserInfoConfig;
 import com.gws.controllers.backSM.SMUtil;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.dto.backstage.UserDetailDTO;
@@ -12,17 +10,23 @@ import com.gws.entity.backstage.*;
 import com.gws.entity.backstage.createRawTransaction.CreateTXUtils;
 import com.gws.entity.backstage.createRawTransaction.RawTXResp;
 import com.gws.entity.backstage.createRawTransaction.SendTXResp;
-import com.gws.exception.ExceptionUtils;
+import com.gws.entity.backstage.price.PriceResult;
+import com.gws.entity.backstage.wallet_lbz.USDGTXUtis;
 import com.gws.repositories.master.backstage.*;
 import com.gws.repositories.query.backstage.*;
 import com.gws.repositories.slave.backstage.*;
 import com.gws.services.backstage.BackAssetManagementService;
 import com.gws.utils.IPUtil;
-import com.gws.utils.blockchain.BlockUtils;
-import com.gws.utils.blockchain.Protobuf4EdsaUtils;
-import com.gws.utils.blockchain.ProtobufBean;
+import com.gws.utils.ReadConfUtil;
+import com.gws.utils.blockchain.*;
 import com.gws.utils.cache.IdGlobalGenerator;
 import com.gws.utils.decimal.DecimalUtil;
+import com.gws.utils.http.ConfReadUtil;
+import com.gws.utils.http.HttpRequest;
+import com.gws.utils.http.LangReadUtil;
+import com.gws.utils.transfer.TransferCoin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -46,6 +50,8 @@ import java.util.*;
  */
 @Service
 public class BackAssetManagementServiceImpl implements BackAssetManagementService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BackAssetManagementServiceImpl.class);
 
     private final FrontUserSlave frontUserSlave;
 
@@ -83,6 +89,10 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
 
     private final BackUserSlave backUserSlave;
 
+    private final UserContractSlave userContractSlave;
+
+    private final UsdgGoldTopupMaster usdgGoldTopupMaster;
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -92,18 +102,62 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     @Value("${blockchain.bankAddress}")
     private String bankAddress;
     /**
-     * 银行的私钥
+     * 银行的公钥
      */
     @Value("${blockchain.bankPubkey}")
     private String bankPubkey;
     /**
-     * 银行的公钥
+     * 银行的私钥
      */
     @Value("${blockchain.bankPrikey}")
     private String bankPrikey;
 
+    /**
+     * 平台BTY地址
+     */
+    @Value("${platform.bty.address}")
+    private String platformBtyAddress;
+    @Value("${platform.bty.seed}")
+    private String platformBtySeed;
+    @Value("${platform.bty.privatekey}")
+    private String platformBtyPrivatekey;
+    @Value("${platform.bty.publickey}")
+    private String platformBtyPublickey;
+    @Value("${platform.bty.pubkey}")
+    private String platformBtyPubkey;
+    @Value("${platform.bty.prikey}")
+    private String platformBtyPrikey;
+
+    /**
+     * 平台USDG地址
+     */
+    @Value("${platform.usdg.address}")
+    private String platformUsdgAddress;
+    @Value("${platform.usdg.seed}")
+    private String platformUsdgSeed;
+    @Value("${platform.usdg.privatekey}")
+    private String platformUsdgPrivatekey;
+    @Value("${platform.usdg.publickey}")
+    private String platformUsdgPublickey;
+    @Value("${platform.usdg.pubkey}")
+    private String platformUsdgPubkey;
+    @Value("${platform.usdg.prikey}")
+    private String platformUsdgPrikey;
+
+    /**
+     * 获取最新价格的接口
+     */
+    @Value("${kline.data.price}")
+    private String gettingprice;
+
+    /**
+     * 滨江区块链接口
+     */
+    @Value("${blockchain.walleturl}")
+    private String walleturl;
+
     @Autowired
-    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave, BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave, PlatformGoldSlave platformGoldSlave, PlatformGoldMaster platformGoldMaster, BtyAddressesSlave btyAddressesSlave, BtyAddressesMaster btyAddressesMaster, IdGlobalGenerator idGlobalGenerator, BackUserSlave backUserSlave) {
+    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave, BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave, PlatformGoldSlave platformGoldSlave, PlatformGoldMaster platformGoldMaster, BtyAddressesSlave btyAddressesSlave, BtyAddressesMaster btyAddressesMaster, IdGlobalGenerator idGlobalGenerator, BackUserSlave backUserSlave, UserContractSlave userContractSlave, UsdgGoldTopupMaster usdgGoldTopupMaster) {
         this.frontUserSlave = frontUserSlave;
         this.frontUserAccountSlave = frontUserAccountSlave;
         this.frontUserAccountMaster = frontUserAccountMaster;
@@ -122,10 +176,43 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         this.btyAddressesMaster = btyAddressesMaster;
         this.idGlobalGenerator = idGlobalGenerator;
         this.backUserSlave = backUserSlave;
+        this.userContractSlave = userContractSlave;
+        this.usdgGoldTopupMaster = usdgGoldTopupMaster;
     }
 
     @Override
     public PageDTO queryFrontUserAccount(FrontUserBO frontUserBO) {
+        System.out.println("柯凡地址："+gettingprice);
+        //从柯凡处获取最新市价
+        String jsonResult = HttpRequest.sendGet(gettingprice);
+        PriceResult priceResult = JSON.parseObject(jsonResult, PriceResult.class);
+        if(priceResult.getCode()!=200){
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GET_PRICE_NETWORK_ERROR));
+        }
+        List<PriceResult.Trade> data = priceResult.getData();
+        Double btyusdtPrice = 0d;
+        Double usdtrmbPrice = 0d;
+        Double btyusdgPrice = 0d;
+        //获取【BTY/USDT】,【USDT/RMB】,【BTY/USDG】的兑换价格
+        try{
+            for(PriceResult.Trade trade : data){
+                String symbol = trade.getSymbol();
+                if(Symbol.BTYUSDG.equals(symbol)){
+                    btyusdgPrice = (trade.getBuy() + trade.getSell())/2;
+                }
+                if(Symbol.USDTRMB.equals(symbol)){
+                    usdtrmbPrice = (trade.getBuy() + trade.getSell())/2;
+                }
+                if(Symbol.BTYUSDT.equals(symbol)){
+                    btyusdtPrice = (trade.getBuy() + trade.getSell())/2;
+                }
+            }
+        }catch(Exception e){
+            LOGGER.warn("实时价格计算失败");
+        }
+
+
+
         Integer page = frontUserBO.getPage();
         Integer rowNum = frontUserBO.getRowNum();
         Long uid = frontUserBO.getUid();
@@ -198,6 +285,10 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         List<FrontUserAssetVO> frontUserAssetVOList = new ArrayList<>();
         for(Long key : frontUserAssetVOMap.keySet()){
             FrontUserAssetVO frontUserAssetVO = frontUserAssetVOMap.get(key);
+            Double btyNum = frontUserAssetVO.getBtyNum();
+            Double usdgNum = frontUserAssetVO.getUsdgNum();
+            Double totalAssets = btyNum * btyusdtPrice * usdtrmbPrice + usdgNum / btyusdgPrice * btyusdtPrice * usdtrmbPrice;
+            frontUserAssetVO.setTotalAssets(totalAssets);
             frontUserAssetVOList.add(frontUserAssetVO);
         }
 
@@ -234,78 +325,97 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         return PageDTO.getPagination(totalPage,list);
     }
 
+    /**
+     * 目前思路是
+     * 1：判断平台usdg和gold总账户是否有数据，没有数据就创建新数据，账户资产都是0
+     * 2：调用滨江的转币接口
+     * 3：增加平台黄金增加记录(状态1表示申请中)表usdg_gold_topup
+     * @param assetBO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void addUsdg(AssetBO assetBO) {
         //增加黄金的量(单位kg)
         Double gold = assetBO.getGold();
-        double goldInData = DecimalUtil.multiply(gold,1000,8, RoundingMode.HALF_EVEN);
+        //增加黄金的量(单位g)
+        double goldInGram = DecimalUtil.multiply(gold,1000,8, RoundingMode.HALF_EVEN);
         //增加的usdg的量(等于黄金量*100000)，因为黄金单位是kg，1g黄金=100usdg
-        double increasement = DecimalUtil.multiply(gold,100000,8, RoundingMode.HALF_EVEN);
+        double increasement = DecimalUtil.multiply(goldInGram,100,8, RoundingMode.HALF_EVEN);
 
-        Query usdgQuery = entityManager.createNativeQuery("SELECT id,total_usdg,ctime,utime FROM platform_usdg WHERE id=1 for update",PlatformUsdg.class);
-        Query goldQuery = entityManager.createNativeQuery("SELECT id,total_gold,ctime,utime FROM platform_gold WHERE id=1 for update",PlatformGold.class);
-        List resultList1 = usdgQuery.getResultList();
-        List resultList2 = goldQuery.getResultList();
-        if(resultList1.size() != 0 && resultList2.size() != 0){
-            PlatformUsdg usdgOne = (PlatformUsdg) usdgQuery.getSingleResult();
-            PlatformGold goldOne = (PlatformGold) goldQuery.getSingleResult();
+        //查平台的usdg总账户
+        PlatformUsdg platformUsdg = platformUsdgSlave.findOne(1L);
+        //查平台的黄金总账户
+        PlatformGold platformGold = platformGoldSlave.findOne(1L);
+        //查询平台官方的的usdg信息
+        UsdgOfficialAccount officialAccount = usdgOfficialAccountSlave.findOne(1L);
+        if(platformUsdg == null && platformGold == null && officialAccount == null){
             //平台总的usdg插入数据
-            Double totalUsdg = usdgOne.getTotalUsdg();
-            PlatformUsdg platformUsdg = new PlatformUsdg();
-            platformUsdg.setTotalUsdg(DecimalUtil.add(increasement, totalUsdg, 8, RoundingMode.HALF_EVEN));
-            platformUsdgMaster.updateById(platformUsdg,1L, "totalUsdg");
+            PlatformUsdg newPlatformUsdg = new PlatformUsdg();
+            newPlatformUsdg.setId(1L);
+            newPlatformUsdg.setTotalUsdg(increasement);
+            platformUsdgMaster.save(newPlatformUsdg);
 
-            //平台总的黄金库表插入数据
-            Double totalGold = goldOne.getTotalGold();
-            PlatformGold platformGold = new PlatformGold();
-            platformGold.setTotalGold(DecimalUtil.add(goldInData, totalGold, 8, RoundingMode.HALF_EVEN));
-            platformGoldMaster.updateById(platformGold,1L, "totalGold");
+            //平台总的黄金库存表插入数据
+            PlatformGold newPlatformGold = new PlatformGold();
+            newPlatformGold.setId(1L);
+            newPlatformGold.setTotalGold(goldInGram );
+            platformGoldMaster.save(newPlatformGold);
 
-            //更新平台的usdg账户中总usdg数量和可用usdg数量
-            Query accountQuery = entityManager.createNativeQuery("SELECT id,type,name,address,publickey,privatekey,real_amount,usable_amount,freeze_amount,ctime,utime FROM usdg_official_account WHERE type="+CoinType.USDG+" FOR UPDATE ",UsdgOfficialAccount.class);
-            List<UsdgOfficialAccount> accountOnes = (List<UsdgOfficialAccount>) accountQuery.getResultList();
-            UsdgOfficialAccount accountOne = accountOnes.get(0);
-            if(accountOne == null){
-                throw new RuntimeException("平台usdg账户信息丢失");
+            //平台官方账户里面初次加入BTY/USDG数据
+            String address = USDGTXUtis.createAddress("1");
+            for (int i=1;i<=2;i++){
+                UsdgOfficialAccount usdgOfficialAccount = new UsdgOfficialAccount();
+                usdgOfficialAccount.setId((long)i);
+                usdgOfficialAccount.setType(i);
+                if(CoinType.USDG.equals(i)){
+                    usdgOfficialAccount.setName(CoinType2.USDG);
+                    usdgOfficialAccount.setPubkey(platformUsdgPubkey);
+                    usdgOfficialAccount.setPrikey(platformUsdgPrikey);
+                    usdgOfficialAccount.setRealAmount(increasement);
+                    usdgOfficialAccount.setUsableAmount(increasement);
+                    usdgOfficialAccount.setFreezeAmount(0d);
+                }
+                if(CoinType.BTY.equals(i)){
+                    usdgOfficialAccount.setName(CoinType2.BTY);
+                    usdgOfficialAccount.setPubkey(platformBtyPubkey);
+                    usdgOfficialAccount.setPrikey(platformBtyPrikey);
+                    usdgOfficialAccount.setRealAmount(0d);
+                    usdgOfficialAccount.setUsableAmount(0d);
+                    usdgOfficialAccount.setFreezeAmount(0d);
+                }
+                usdgOfficialAccount.setAddress(address);
+                usdgOfficialAccountMaster.save(usdgOfficialAccount);
             }
-
-            UsdgOfficialAccount usdgOfficialAccount = new UsdgOfficialAccount();
-            Long id = accountOne.getId();
-            Double realAmount = accountOne.getRealAmount();
-            Double usableAmount = accountOne.getUsableAmount();
-            usdgOfficialAccount.setRealAmount(DecimalUtil.add(realAmount,increasement,8,RoundingMode.HALF_EVEN));
-            usdgOfficialAccount.setUsableAmount(DecimalUtil.add(usableAmount,increasement,8,RoundingMode.HALF_EVEN));
-            usdgOfficialAccountMaster.updateById(usdgOfficialAccount, id,"realAmount","usableAmount");
-            return;
+        }else{
+            Query nativeQuery1 = entityManager.createNativeQuery("UPDATE platform_gold SET total_gold = total_gold + ? WHERE id = 1");
+            nativeQuery1.setParameter(1,goldInGram);
+            int success1 = nativeQuery1.executeUpdate();
+            if(success1 == 0){
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_GOLD_TABLE_FAIL));
+            }
+            Query nativeQuery2 = entityManager.createNativeQuery("UPDATE platform_usdg SET total_usdg = total_usdg + ? WHERE id = 1");
+            nativeQuery2.setParameter(1,increasement);
+            int success2 = nativeQuery2.executeUpdate();
+            if(success2 == 0){
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_USDG_TABLE_FAIL));
+            }
+            Query nativeQuery3 = entityManager.createNativeQuery("UPDATE usdg_official_account SET usable_amount = usable_amount + ?,real_amount = real_amount + ? WHERE type = ?");
+            nativeQuery3.setParameter(1,increasement);
+            nativeQuery3.setParameter(2,increasement);
+            nativeQuery3.setParameter(3,CoinType.USDG);
+            int success3 = nativeQuery3.executeUpdate();
+            if(success3 == 0){
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_USDG_ACCOUNT_FAIL));
+            }
         }
-        //平台总的usdg插入数据
-        PlatformUsdg platformUsdg = new PlatformUsdg();
-        platformUsdg.setId(1L);
-        platformUsdg.setTotalUsdg(increasement);
-        System.out.println(platformUsdg);
-        platformUsdgMaster.save(platformUsdg);
-        //平台的账户插入数据
-        UsdgOfficialAccount usdgOfficialAccount = new UsdgOfficialAccount();
-        usdgOfficialAccount.setId(1L);
-        usdgOfficialAccount.setType(CoinType.USDG);
-        usdgOfficialAccount.setName("USDG");
-        //TODO
-        usdgOfficialAccount.setAddress("ABCDEFG");
-        //TODO
-        usdgOfficialAccount.setPublicKey("publickey1");
-        //TODO
-        usdgOfficialAccount.setPrivateKey("privatekey1");
-        usdgOfficialAccount.setRealAmount(increasement);
-        usdgOfficialAccount.setUsableAmount(increasement);
-        usdgOfficialAccount.setFreezeAmount(0d);
-        usdgOfficialAccountMaster.save(usdgOfficialAccount);
 
-        //平台总的黄金库存表插入数据
-        PlatformGold platformGold = new PlatformGold();
-        platformGold.setId(1L);
-        platformGold.setTotalGold(DecimalUtil.multiply(gold,1000,8,RoundingMode.HALF_EVEN));
-        platformGoldMaster.save(platformGold);
+        ProtobufBean protobufBean = Protobuf4EdsaUtils.requestTransfer(bankPrikey, SymbolId.USDG, bankPubkey, platformUsdgPubkey, (long) (100000000 * increasement));
+        String result = BlockUtils.sendPostParam(protobufBean);
+        boolean flag = BlockUtils.vilaResult(result);
+        if(!flag){
+            LOGGER.error("平台增加黄金出现区块链错误:"+BlockUtils.getErrorMessage(result));
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.BLOCK_CHIAN_ERROR)+BlockUtils.getErrorMessage(result));
+        }
     }
 
     @Override
@@ -401,156 +511,146 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void firstPass(FrontUserBO frontUserBO) {
-        //获取用户的详细信息
-        UserDetailDTO userDetailDTO = frontUserBO.getUserDetailDTO();
-
         Integer currentTime = (int)System.currentTimeMillis()/1000;
         Long id = frontUserBO.getId();
         FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
         if(one==null){
-            throw new RuntimeException("该申请信息不存在");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.APPLY_ORDER_NOT_EXIST));
         }
         if(!one.getApplyStatus().equals(CoinWithdrawStatusEnum.TO_CHECK.getCode())){
-            throw new RuntimeException("该申请信息不为待审核状态");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.APPLY_NOT_IN_TO_CHECK));
         }
         FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
         frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.FIRST_PASS.getCode());
         frontUserWithdrawApply.setUtime(currentTime);
-        frontUserWithdrawApply.setFirstCheckUid(userDetailDTO.getUid());
-        frontUserWithdrawApply.setFirstCheckName(userDetailDTO.getPersonName());
+        frontUserWithdrawApply.setFirstCheckUid(UserInfoConfig.getUserInfo().getUid());
+        frontUserWithdrawApply.setFirstCheckName(UserInfoConfig.getUserInfo().getPersonName());
         int success = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime","firstCheckUid","firstCheckName");
         if(success==0){
-            throw new RuntimeException("用户申请信息更新失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_USER_APPLY_INFO_FAIL));
         }
     }
 
+    /**
+     * 王斌在提币申请的时候，只是冻结了用户资产(包含手续费)
+     * 异常处理注意：如果这里调滨江接口的时候出现异常，等接口正常后再调取(大不了拒绝就行了)
+     * @param frontUserBO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void secondPass(FrontUserBO frontUserBO) {
-        Integer lang = frontUserBO.getLang();
-        //获取用户的详细信息
-        UserDetailDTO userDetailDTO = frontUserBO.getUserDetailDTO();
+    public void  secondPass(FrontUserBO frontUserBO) {
+        /*
+            1，查询用户本地合约(黄学忠接口用)的公私钥
+            2，旷工费打给平台
+            3，提的币(不含旷工费)打给银行
+            4，调用滨江转币接口
+            5，将4返回的hash存入提取的那条数据中
 
-        Integer currentTime = (int)System.currentTimeMillis()/1000;
+            注意：不改变用户账户的冻结资产，等王斌根据这个hash查询到用户的交易信息后再去数据库改，同时平台的账户还要增加旷工费
+         */
+
+        Integer currentTime = (int) System.currentTimeMillis()/1000;
         Long id = frontUserBO.getId();
+        //获取该申请单详细信息
         FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
         if(one==null){
-            throw new RuntimeException("该申请信息不存在");
+            throw new RuntimeException (LangReadUtil.getProperty(ErrorMsg.APPLY_ORDER_NOT_EXIST));
         }
+        //判断订单状态是否正确
         if(!one.getApplyStatus().equals(CoinWithdrawStatusEnum.FIRST_PASS.getCode())){
-            throw new RuntimeException("该申请信息不为初审通过状态");
-        }
-        FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
-        frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.SECOND_PASS.getCode());
-        frontUserWithdrawApply.setUtime(currentTime);
-        frontUserWithdrawApply.setSecondCheckUid(userDetailDTO.getUid());
-        frontUserWithdrawApply.setSecondCheckName(userDetailDTO.getPersonName());
-        int success = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime","secondCheckUid","secondCheckName");
-        if(success==0){
-            throw new RuntimeException("用户申请信息更新失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.APPLY_NOT_IN_FIRST_PASS));
         }
 
-        //提取的数量
-        Double coinAmount = one.getCoinAmount();
-        long amount = (long) (coinAmount * 100000000);
-        //旷工费
+        //todo 提取的数量（包含旷工费）
+        Double totalAmount = one.getCoinAmount();
+        //todo 旷工费(这笔钱是通过交易给平台的账号，真实的币是通过总地址打给外部的地址的)
         Double minerAmount = one.getMinerAmount();
-        long fee = (long) (minerAmount * 100000000);
+        // todo 真实到账的币数量 = 提币数量 - 旷工费
+        double coinAmount = DecimalUtil.subtract(totalAmount,minerAmount,8,RoundingMode.HALF_EVEN);
         //要打币去的地址
         String toAddress = one.getOuterAddress();
 
-        //币种类型
+        //币种类型1:usdg 2:bty
         Integer coinType = one.getCoinType();
         //申请该订单信息的人的uid
         Long uid = one.getUid();
-        //查询到用户的资产的详细信息，因为之前王斌在提币的时候已经将币直接从账户中扣除了，只需要将币直接给账户加回到总资产和可用资产就可以了
-        UsdgUserAccountQuery usdgUserAccountQuery = new UsdgUserAccountQuery();
-        usdgUserAccountQuery.setType(coinType);
-        usdgUserAccountQuery.setUid(uid);
-        UsdgUserAccount usdgUserAccount = frontUserAccountSlave.findOne(usdgUserAccountQuery);
 
-        //申请人，前台用户的私钥
-        String privateKey = usdgUserAccount.getPrivateKey();
-        //申请人，前台用户的公钥
-        String publicKey = usdgUserAccount.getPublicKey();
+        //查询到用户本地区块链的公私钥(走黄学忠接口)
+        UserContract userContract = userContractSlave.findOne(uid);
+        String privatekey = userContract.getPrivatekey();
+        String publickey = userContract.getPublickey();
 
-        //发送4.1.1 构造交易CreateRawTransaction的接口
-        String createRawTXResult = CreateTXUtils.createRawTransaction(toAddress, amount, fee, "", false, "BTY");
-        //解析返回的结果
-        RawTXResp rawTXResp = JSON.parseObject(createRawTXResult, RawTXResp.class);
-        if(StringUtils.isEmpty(rawTXResp.getResult())){
-            //如果result为空，直接将error中的错误信息返回给前端
-            ExceptionUtils.throwException(ErrorMsg.BLOCK_CHIAN_ERROR,lang,rawTXResp.getError());
+        //将旷工费给平台(黄学忠接口转)
+        LOGGER.info("将旷工费给平台(黄学忠接口转)");
+//        long minerFee = (long) (minerAmount * 100000000);
+        int symboldId =(CoinType.BTY.equals(coinType) ? SymbolId.BTY : SymbolId.USDG);
+        TransferCoin.transferCoin(publickey,privatekey,platformUsdgPubkey,minerAmount,symboldId);
+
+        //将提取的币打给银行(黄学忠接口转)
+        LOGGER.info("将提取的币打给银行(黄学忠接口转)");
+        long amount = (long) (coinAmount * 100000000);
+        ProtobufBean toBank = Protobuf4EdsaUtils.requestTransfer(privatekey, symboldId, publickey, bankPubkey, amount);
+        String result2 = BlockUtils.sendPostParam(toBank);
+        boolean flag2 = BlockUtils.vilaResult(result2);
+        if(!flag2){
+            String errorMessage2 = BlockUtils.getErrorMessage(result2);
+            LOGGER.error("前台用户提币，将旷工费打给平台时，区块链出现错误：{}",errorMessage2);
+            //出错还要将旷工费返打回去
+            TransferCoin.transferCoin(platformUsdgPubkey,platformUsdgPrikey,publickey,minerAmount,symboldId);
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.BLOCK_CHIAN_ERROR)+errorMessage2);
         }
 
-        String unsigntx = rawTXResp.getResult();
-        String sign = CreateTXUtils.getSign(unsigntx,privateKey);
-        //发送4.1.2 发送交易sendRawTransaction的接口
-        String sendRawTXResult = CreateTXUtils.SendRawTransaction(unsigntx,sign,publicKey,1);
-        //解析返回的结果
-        SendTXResp sendTXResp = JSON.parseObject(sendRawTXResult, SendTXResp.class);
-        if(StringUtils.isEmpty(sendTXResp.getResult())){
-            //如果result为空，直接将error中的错误信息返回给前端
-            ExceptionUtils.throwException(ErrorMsg.BLOCK_CHIAN_ERROR,lang,sendTXResp.getError());
+        //将币通过总地址打给外部地址(李邦柱接口转)
+        LOGGER.info("将币通过总地址打给外部地址(李邦柱接口转)");
+        String hash;
+        try {
+            hash = USDGTXUtis.withdrawCoin(toAddress, amount, CoinType2.USDG);
+        }catch (Exception e){
+            //提币调用滨江出错，还要将旷工费返打回去，还要从银行将提的币返打回去
+            LOGGER.error("提币调用滨江出错，还要将旷工费返打回去，还要从银行将提的币返打回去,币种symboldId：{}，旷工费：{}，提币数量(不含旷工费)：{}",symboldId,minerAmount,coinAmount);
+            TransferCoin.transferCoin(platformUsdgPubkey,platformUsdgPrikey,publickey,minerAmount,symboldId);
+            ProtobufBean bankToUser = Protobuf4EdsaUtils.requestTransfer(bankPrikey, symboldId, bankPubkey, publickey, amount);
+            String result3 = BlockUtils.sendPostParam(bankToUser);
+            boolean flag3 = BlockUtils.vilaResult(result3);
+            if(!flag3){
+                String errorMessage3 = BlockUtils.getErrorMessage(result3);
+                LOGGER.error("前台用户提币调用滨江区块链出错后，从银行反打币给用户提的币出现区块链错误：{}",errorMessage3);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.BLOCK_CHIAN_ERROR)+errorMessage3);
+            }
+
+            throw new RuntimeException(e);
         }
 
-
-        //*****************************用户的账户不需要改变资产信息，因为王斌在提币的时候已经将对应的数量扣掉了**********************************************
-//        /*
-//         * 将钱和旷工费从用户的账户中扣除(扣除掉冻结那部分的钱)
-//         */
-//        //提取的数量
-//        Double coinAmount = one.getCoinAmount();
-//        //旷工费
-//        Double minerAmount = one.getMinerAmount();
-//        double totalAmount = DecimalUtil.add(coinAmount,minerAmount,8,RoundingMode.HALF_EVEN);
-//        //币种类型
-//        Integer coinType = one.getCoinType();
-//        //申请该订单信息的人的uid
-//        Long uid = one.getUid();
-//
-//        UsdgUserAccountQuery usdgUserAccountQuery = new UsdgUserAccountQuery();
-//        usdgUserAccountQuery.setType(coinType);
-//        usdgUserAccountQuery.setUid(uid);
-//        UsdgUserAccount usdgUserAccount = frontUserAccountSlave.findOne(usdgUserAccountQuery);
-//
-//        //当前用户的账户id号
-//        Long accountId = usdgUserAccount.getId();
-//        //当前账户可用数量
-//        Double usableAmount = usdgUserAccount.getUsableAmount();
-//        //当前账户冻结数量
-//        Double freezeAmount = usdgUserAccount.getFreezeAmount();
-//
-//        double freezeResult = DecimalUtil.subtract(freezeAmount,totalAmount,8,RoundingMode.HALF_EVEN);
-//        double realResult = DecimalUtil.add(usableAmount,freezeResult,8,RoundingMode.HALF_EVEN);
-//
-//        UsdgUserAccount userAccount = new UsdgUserAccount();
-//        userAccount.setFreezeAmount(freezeResult);
-//        userAccount.setRealAmount(realResult);
-//        userAccount.setUtime(currentTime);
-//        int success2 = frontUserAccountMaster.updateById(userAccount, accountId, "realAmount", "freezeAmount", "utime");
-//        if(success2 == 0){
-//            throw new RuntimeException("用户账户信息更新失败");
-//        }
-
+        //将hash存入申请表中，同时将申请单的状态改成成功,同时补充复审人的人名和uid
+        FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
+        frontUserWithdrawApply.setHash(hash);
+        frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.SECOND_PASS.getCode());
+        frontUserWithdrawApply.setUtime(currentTime);
+        frontUserWithdrawApply.setSecondCheckUid(UserInfoConfig.getUserInfo().getUid());
+        frontUserWithdrawApply.setSecondCheckName(UserInfoConfig.getUserInfo().getPersonName());
+        frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply,id,"applyStatus","secondCheckUid","secondCheckName","hash","utime");
     }
 
+
+    /**
+     * 王斌在提币申请的时候将用户的钱先往银行打，同时冻结了资产(包含手续费)
+     * 这里如果拒绝的话直接解冻，同时将银行里的钱返还给用户即可
+     * @param frontUserBO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rejectWithdraw(FrontUserBO frontUserBO) {
-        Integer lang = frontUserBO.getLang();
-        //获取用户的详细信息
-        UserDetailDTO userDetailDTO = frontUserBO.getUserDetailDTO();
-
         Integer currentTime = (int)(System.currentTimeMillis()/1000);
+        //提币申请单的id号
         Long id = frontUserBO.getId();
         //获取用户提币申请的详细信息
         FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
         if(one==null){
-            throw new RuntimeException("该申请信息不存在");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.APPLY_ORDER_NOT_EXIST));
         }
+        //只有待审核和初审才有资格被撤销
         if(!one.getApplyStatus().equals(CoinWithdrawStatusEnum.TO_CHECK.getCode()) && !one.getApplyStatus().equals(CoinWithdrawStatusEnum.FIRST_PASS.getCode())){
-            throw new RuntimeException("该申请信息已经完成");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.APPLY_ORDER_FINISHED));
         }
 
         //更新申请信息的状态
@@ -559,79 +659,39 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         frontUserWithdrawApply.setUtime(currentTime);
         int success1 = 0;
         if(one.getApplyStatus().equals(CoinWithdrawStatusEnum.TO_CHECK.getCode())){
-            frontUserWithdrawApply.setFirstCheckUid(userDetailDTO.getUid());
-            frontUserWithdrawApply.setFirstCheckName(userDetailDTO.getPersonName());
+            frontUserWithdrawApply.setFirstCheckUid(UserInfoConfig.getUserInfo().getUid());
+            frontUserWithdrawApply.setFirstCheckName(UserInfoConfig.getUserInfo().getPersonName());
             success1 = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime","firstCheckUid","firstCheckName");
         }
         if(one.getApplyStatus().equals(CoinWithdrawStatusEnum.FIRST_PASS.getCode())){
-            frontUserWithdrawApply.setSecondCheckUid(userDetailDTO.getUid());
-            frontUserWithdrawApply.setSecondCheckName(userDetailDTO.getPersonName());
+            frontUserWithdrawApply.setSecondCheckUid(UserInfoConfig.getUserInfo().getUid());
+            frontUserWithdrawApply.setSecondCheckName(UserInfoConfig.getUserInfo().getPersonName());
             success1 = frontUserCoinWithdrawMaster.updateById(frontUserWithdrawApply, id, "applyStatus","utime","secondCheckUid","secondCheckName");
         }
         if(success1 == 0){
-            throw new RuntimeException("用户申请信息更新失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_USER_APPLY_INFO_FAIL));
         }
 
         /*
          * 将钱和旷工费从冻结状态返还给该用户的账户
          */
-        //提取的数量
+        //提取的数量(数据库里面有coin_amount的备注，这个是包含了旷工费的，所以不需要再加旷工费miner_amount了)
         Double coinAmount = one.getCoinAmount();
         //旷工费
-        Double minerAmount = one.getMinerAmount();
-        double totalAmount = DecimalUtil.add(coinAmount,minerAmount,8,RoundingMode.HALF_EVEN);
+//        Double minerAmount = one.getMinerAmount();
         //币种类型
         Integer coinType = one.getCoinType();
         //申请该订单信息的人的uid
         Long uid = one.getUid();
 
-        //查询到用户的资产的详细信息，因为之前王斌在提币的时候已经将币直接从账户中扣除了，只需要将币直接给账户加回到总资产和可用资产就可以了
-        UsdgUserAccountQuery usdgUserAccountQuery = new UsdgUserAccountQuery();
-        usdgUserAccountQuery.setType(coinType);
-        usdgUserAccountQuery.setUid(uid);
-        UsdgUserAccount usdgUserAccount = frontUserAccountSlave.findOne(usdgUserAccountQuery);
-
-        //当前用户的账户id号
-        Long accountId = usdgUserAccount.getId();
-        //当前账户总资产数量
-        Double realAmount = usdgUserAccount.getRealAmount();
-        //当前账户可用资产数量
-        Double usableAmount = usdgUserAccount.getUsableAmount();
-
-        double realResult = DecimalUtil.add(realAmount,totalAmount,8,RoundingMode.HALF_EVEN);
-        double usableResult = DecimalUtil.add(usableAmount,totalAmount,8,RoundingMode.HALF_EVEN);
-
-        UsdgUserAccount userAccount = new UsdgUserAccount();
-        userAccount.setRealAmount(realResult);
-        userAccount.setUsableAmount(usableResult);
-        userAccount.setUtime(currentTime);
-        int success2 = frontUserAccountMaster.updateById(userAccount, accountId, "realAmount","usableAmount", "utime");
-        if(success2 == 0){
-            throw new RuntimeException("用户账户信息更新失败");
-        }
-
-        //接下来是区块链，银行要将用户之前打给银行的钱返还给银行,double要换算成double*10的8次方
-        Long amount = (long) (1L * totalAmount * 100000000);
-        //银行地址(这是银行的公钥)-------------->TODO
-        String fromAddress = bankPubkey;
-        //用户在平台的地址(这是用户的公钥)------->TODO
-        String toAddress = usdgUserAccount.getPublicKey();
-        //当前用户的私钥
-        String privateKey = usdgUserAccount.getPrivateKey();
-
-        int symbolId = 0;
-        if(coinType.equals(CoinType.USDG)){
-            symbolId = SymbolId.USDG;
-        }
-        if(coinType.equals(CoinType.BTY)){
-            symbolId = SymbolId.BTY;
-        }
-        ProtobufBean protobufBean = Protobuf4EdsaUtils.requestTransfer(privateKey, symbolId, fromAddress, toAddress, amount);
-        String jsonResult = BlockUtils.sendPostParam(protobufBean);
-        boolean flag = BlockUtils.vilaResult(jsonResult);
-        if(!flag){
-            String errorMessage = BlockUtils.getErrorMessage(jsonResult);
-            ExceptionUtils.throwException(ErrorMsg.BLOCK_CHIAN_ERROR,lang,errorMessage);
+        Query nativeQuery = entityManager.createNativeQuery("UPDATE usdg_user_account SET usable_amount = usable_amount + ?,freeze_amount = freeze_amount - ? WHERE uid = ? AND type = ?");
+        nativeQuery.setParameter(1,coinAmount);
+        nativeQuery.setParameter(2,coinAmount);
+        nativeQuery.setParameter(3,uid);
+        nativeQuery.setParameter(4,coinType);
+        int success = nativeQuery.executeUpdate();
+        if(success == 0){
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_USER_ACCOUNT_FAIL));
         }
     }
 
@@ -750,90 +810,69 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     public void withdrawBTY(AssetBO assetBO) {
         /*
          1, 检查平台当前BTY资产是否充足（从数据库中查）
-         2，检查
+         2，检查手机验证码是否通过
+         3，将用户bty资产冻结【注意：是冻结，因为滨江接口是异步调用】
+         4，将用户的bty资产打入黄学忠的银行(合约接口)
+         5，调用滨江的转币接口
+         6，将滨江返回的hash值存入交易记录表中（方便王斌定时扫描，然后改变账户资金额）
          */
-        Integer lang = assetBO.getLang();
         String toAddress = assetBO.getToAddress();
         Double amount = assetBO.getAmount();
-        Double fee = assetBO.getFee();
-        String code = assetBO.getCode(); //短信验证码
+        int coinType = assetBO.getCoinType();
+        //TODO 目前这个手续费是0
+        //短信验证码
+        String code = assetBO.getCode();
         HttpServletRequest request = assetBO.getRequest();
-        String note = assetBO.getNote();
-        if(StringUtils.isEmpty(note)){
-            //如果用户没有写备注信息，这里默认用一个写死的值，不然到时候区块链解析可能会出错，需要写值进去
-            note = "welcome to use";
-        }
-        double totalAmount = DecimalUtil.add(amount, fee, 8, RoundingMode.HALF_EVEN);
 
-
-
-        BackUser one = backUserSlave.findOne(1L);//---->todo 获取平台超级管理员的详细信息(steven的个人账户信息)
+        //---->todo 获取平台超级管理员的详细信息(steven的个人账户信息)
+        BackUser one = backUserSlave.findOne(1L);
         String phone = one.getContact();
         //*********************短信验证码的验证**********************
         String ip = IPUtil.getIpAddr(request);
-        boolean flag = SMUtil.valiSMCode(code, phone, ip, lang);
+        boolean flag = SMUtil.valiSMCode(code, phone, ip);
         if(!flag){
-            ExceptionUtils.throwException(ErrorMsg.SM_ERROR,lang);
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.SM_ERROR));
         }
         //*********************短信验证码的验证**********************
 
-
-        UsdgOfficialAccountQuery usdgOfficialAccountQuery = new UsdgOfficialAccountQuery();
-        usdgOfficialAccountQuery.setType(CoinType.BTY);
-
-        UsdgOfficialAccount officalAccount = usdgOfficialAccountSlave.findOne(usdgOfficialAccountQuery);
-        Double usableAmount = officalAccount.getUsableAmount();
-        if(totalAmount > usableAmount){
-            ExceptionUtils.throwException(ErrorMsg.MONEY_NOT_ENOUGH,lang);
-        }
-
-        Query nativeQuery = entityManager.createNativeQuery("UPDATE usdg_official_account SET real_amount = real_amount - ?,usable_amount = usable_amount - ? WHERE type = ?");
-        nativeQuery.setParameter(1,totalAmount);
-        nativeQuery.setParameter(2,totalAmount);
-        nativeQuery.setParameter(3,CoinType.BTY);
+        //先将平台的账户币数量先冻结了，而不是直接先扣除 todo 【让王斌的定时器去处理】
+        Query nativeQuery = entityManager.createNativeQuery("UPDATE usdg_official_account SET usable_amount = usable_amount - ?,freeze_amount = freeze_amount + ? WHERE type = ?");
+        nativeQuery.setParameter(1,amount);
+        nativeQuery.setParameter(2,amount);
+        nativeQuery.setParameter(3,coinType);
         int success = nativeQuery.executeUpdate();
         if(success == 0){
-            ExceptionUtils.throwException(ErrorMsg.UPDATE_USER_INFO_FAIL,lang);
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_USER_INFO_FAIL));
         }
 
-        //平台的公钥
-        String publicKey = officalAccount.getPublicKey();
-        //平台的私钥
-        String privateKey = officalAccount.getPrivateKey();
-        int symbolId = SymbolId.BTY;
+        LOGGER.info("平台提币调用黄学忠接口：{}，提币数量为：{}",coinType,amount);
+        int symbolId = (coinType == CoinType.BTY ? SymbolId.BTY : SymbolId.USDG);
         //平台提币，先要将币打入到该平台的虚拟银行账户下，然后再调公链的接口
-        ProtobufBean protobufBean = Protobuf4EdsaUtils.requestTransfer(privateKey, symbolId, publicKey, bankPubkey, (long)(totalAmount*100000000));
-
-        //---------------------------------------------------------------------------------------->todo,第1个请求
+        ProtobufBean protobufBean = Protobuf4EdsaUtils.requestTransfer(platformBtyPrikey, symbolId, platformBtyPubkey, bankPubkey, (long)(amount*100000000));
+        //---------------------------------------------------------------------------------------->todo,第1个请求（调用黄学忠的接口）
         String jsonResult = BlockUtils.sendPostParam(protobufBean);
         boolean flag2 = BlockUtils.vilaResult(jsonResult);
         if(!flag2){
             String errorMessage = BlockUtils.getErrorMessage(jsonResult);
-            ExceptionUtils.throwException(ErrorMsg.BLOCK_CHIAN_ERROR,lang,errorMessage);
+            LOGGER.error("平台提币调用黄学忠接口：{}，出现区块链错误",coinType);
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.BLOCK_CHIAN_ERROR)+errorMessage);
         }
 
-
-        //接下来才是向公链发送请求，将币打到用户指定的地址
-        //---------------------------------------------------------------------------------------->todo,第2个请求
-        String createRawTXResult = CreateTXUtils.createRawTransaction(toAddress, (long) (amount * 100000000), (long) (fee * 100000000), note, false, "BTY");
-        //解析返回的结果
-        RawTXResp rawTXResp = JSON.parseObject(createRawTXResult, RawTXResp.class);
-        if(StringUtils.isEmpty(rawTXResp.getResult())){
-            //如果result为空，直接将error中的错误信息返回给前端
-            ExceptionUtils.throwException(ErrorMsg.BLOCK_CHIAN_ERROR,lang,rawTXResp.getError());
-        }
-
-        //获取未签名的数据
-        String unsignTx = rawTXResp.getResult();
-        String sign = CreateTXUtils.getSign(unsignTx,privateKey);
-        //发送4.1.2 发送交易sendRawTransaction的接口
-        //---------------------------------------------------------------------------------------->todo,第3个请求,这里的ty也是写死的，都是1
-        String sendRawTXResult = CreateTXUtils.SendRawTransaction(unsignTx,sign,publicKey,1);
-        //解析返回的结果
-        SendTXResp sendTXResp = JSON.parseObject(sendRawTXResult, SendTXResp.class);
-        if(StringUtils.isEmpty(sendTXResp.getResult())){
-            //如果result为空，直接将error中的错误信息返回给前端
-            ExceptionUtils.throwException(ErrorMsg.BLOCK_CHIAN_ERROR,lang,sendTXResp.getError());
+        String tokenSymbol = (coinType == CoinType.USDG ? CoinType2.USDG : CoinType2.BTY);
+        String hash;
+        try {
+            hash = USDGTXUtis.withdrawCoin(toAddress, amount * 100000000, tokenSymbol);
+        }catch (Exception e){
+            //调滨江接口出现问题，需要调黄学忠接口将币从银行反打回用户去
+            ProtobufBean protobufBean2 = Protobuf4EdsaUtils.requestTransfer(bankPrikey, symbolId, bankPubkey, platformBtyPubkey, (long)(amount*100000000));
+            String jsonResult2 = BlockUtils.sendPostParam(protobufBean2);
+            boolean flag3 = BlockUtils.vilaResult(jsonResult2);
+            if(!flag3){
+                String errorMessage2 = BlockUtils.getErrorMessage(jsonResult2);
+                LOGGER.error("平台提币调用滨江接口出错后反调黄学忠接口又出现错误，打币的币种为：{}，提币数量为：{}",coinType,amount);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.BLOCK_CHIAN_ERROR)+errorMessage2);
+            }
+            throw new RuntimeException(e);
         }
 
         //对第三个请求返回的结果的hash值要存入交易信息中
@@ -841,7 +880,7 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         frontUserWithdrawApply.setId(idGlobalGenerator.getSeqId(FrontUserWithdrawApply.class));
         frontUserWithdrawApply.setUid(1L);//默认平台账户的前台账户uid号为1
         frontUserWithdrawApply.setCoinAmount(amount);
-        frontUserWithdrawApply.setMinerAmount(fee);
+        frontUserWithdrawApply.setMinerAmount(0d);
         frontUserWithdrawApply.setPhoneNumber(phone);
         frontUserWithdrawApply.setPersonName(one.getPersonName());
         frontUserWithdrawApply.setFirstCheckUid(one.getUid());
@@ -850,10 +889,9 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         frontUserWithdrawApply.setSecondCheckName(one.getPersonName());
         frontUserWithdrawApply.setApplyStatus(CoinWithdrawStatusEnum.SECOND_PASS.getCode());//-------状态必须是复审通过，让王斌去扫描
         frontUserWithdrawApply.setEmail(one.getContact());
-        frontUserWithdrawApply.setCoinType(CoinType.BTY);
-        frontUserWithdrawApply.setInnerAddress(officalAccount.getAddress());
+        frontUserWithdrawApply.setCoinType(coinType);
         frontUserWithdrawApply.setOuterAddress(toAddress);
-        frontUserWithdrawApply.setHash(sendTXResp.getResult());//-------把第三次请求的hash存入
+        frontUserWithdrawApply.setHash(hash);//-------把李邦柱返回的hash存入
         frontUserCoinWithdrawMaster.save(frontUserWithdrawApply);
     }
 

@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @ServletComponentScan
 @SpringBootApplication
@@ -14,8 +15,8 @@ import org.springframework.context.annotation.PropertySource;
 	 			"classpath:conf/slaveShardingContext.xml",
 	 			"classpath:conf/shardingConfig.xml"
 				})
-public class
-GwsWebApplication {
+@EnableAsync
+public class GwsWebApplication {
     public static void main(String[] args) {
     	SpringApplication app = new SpringApplication(GwsWebApplication.class);
         SpringApplication.run(GwsWebApplication.class, args);

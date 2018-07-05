@@ -3,7 +3,11 @@ package com.gws.utils.validate;
 
 import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.common.constants.backstage.LangMark;
+import com.gws.configuration.backstage.LangConfig;
 import com.gws.exception.ExceptionUtils;
+import com.gws.utils.http.LangReadUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * 
@@ -12,11 +16,8 @@ import com.gws.exception.ExceptionUtils;
  * @describe: 针对该项目中其它各类数据校验的工具类
  * @Date: 2017-12-26
  */
+@Component
 public class ValidationUtil {
-
-	private ValidationUtil() {
-		throw new AssertionError("instaniation is not permitted");
-	}
 
 //*****************************************************以下方法都加了int lang参数，支持多国语言*******************************************************************************************8
 	/**
@@ -32,29 +33,29 @@ public class ValidationUtil {
 	 * @date 2017年12月26日 下午3:48:40
 	 */
 	public static final boolean checkRangeOfInt(final Object obj, int min, int max, int lang, final String... patterns) {
-		String number = null;
+		String number;
 		try {
 			if (obj == null) {
-				throw new NullPointerException();
+				throw new NullPointerException(LangReadUtil.getProperty(ErrorMsg.PARAMETER_LOST));
 			}
 			number = String.class.cast(obj);
 			try {
 				Integer num = Integer.parseInt(number);
 				if (num < min) {
-					ExceptionUtils.throwException(ErrorMsg.GREATER_THAN,lang,min);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN) + min);
 				}
 				if(num > max){
-					ExceptionUtils.throwException(ErrorMsg.LESS_THAN,lang,max);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN) + max);
 				}
 			} catch (NumberFormatException e) {
 				throw new NumberFormatException();
 			}
 		} catch (Exception e) {
 			if (e instanceof NullPointerException) {
-				ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			if (e instanceof NumberFormatException) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (e instanceof OutOfRangeException) {
 				throw new OutOfRangeException(e.getMessage());
@@ -63,13 +64,13 @@ public class ValidationUtil {
 			try {
 				num = Integer.class.cast(obj);
 			} catch (Exception e1) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (num < min) {
-				ExceptionUtils.throwException(ErrorMsg.GREATER_THAN,lang,min);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN)+min);
 			}
 			if(num > max){
-				ExceptionUtils.throwException(ErrorMsg.LESS_THAN,lang,max);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN)+max);
 			}
 		}
 		if(patterns.length!=0){//格式校验
@@ -78,7 +79,7 @@ public class ValidationUtil {
 					return true;
 				}
 			}
-			ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 		}
 		return true;
 	}
@@ -111,10 +112,11 @@ public class ValidationUtil {
 	 */
 	public static final boolean checkRangeOfInt(final Integer intValue,int min,int max,int lang, final String...patterns){
 		if (intValue < min) {
-			ExceptionUtils.throwException(ErrorMsg.GREATER_THAN,lang,min);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN)+min);
+
 		}
 		if(intValue > max){
-			ExceptionUtils.throwException(ErrorMsg.LESS_THAN,lang,max);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN)+max);
 		}
 		if(patterns.length!=0){//格式校验
 			for (String pattern : patterns) {
@@ -122,7 +124,7 @@ public class ValidationUtil {
 					return true;
 				}
 			}
-			ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 		}
 		return false;
 	}
@@ -256,26 +258,26 @@ public class ValidationUtil {
 		String number = null;
 		try {
 			if (obj == null) {
-				throw new NullPointerException();
+				throw new NullPointerException(LangReadUtil.getProperty(ErrorMsg.PARAMETER_LOST));
 			}
 			number = String.class.cast(obj);
 			try {
 				Long num = Long.parseLong(number);
 				if (num < min) {
-					ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 				}
 				if(num > max){
-					ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 				}
 			} catch (NumberFormatException e) {
 				throw new NumberFormatException();
 			}
 		} catch (Exception e) {
 			if (e instanceof NullPointerException) {
-				ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			if (e instanceof NumberFormatException) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (e instanceof OutOfRangeException) {
 				throw new OutOfRangeException(e.getMessage());
@@ -284,13 +286,13 @@ public class ValidationUtil {
 			try {
 				num=Long.parseLong(String.valueOf(obj));
 			} catch (Exception e1) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (num < min) {
-				ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 			}
 			if(num > max){
-				ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 			}
 		}
 		if(patterns.length!=0){//格式校验
@@ -299,7 +301,7 @@ public class ValidationUtil {
 					return true;
 				}
 			}
-			ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 		}
 		return true;
 	}
@@ -319,11 +321,14 @@ public class ValidationUtil {
 	 * @date 2017年12月26日 下午3:48:40
 	 */
 	public static final boolean checkRangeOfLong(final Long longValue, long min, long max, int lang, final String...patterns) {
+		if(longValue == null){
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.PARAMETER_LOST));
+		}
 		if (longValue < min) {
-			ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 		}
 		if(longValue > max){
-			ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 		}
 		if(patterns.length!=0){//格式校验
 			for (String pattern : patterns) {
@@ -331,7 +336,7 @@ public class ValidationUtil {
 					return true;
 				}
 			}
-			ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 		}
 		return true;
 	}
@@ -470,10 +475,10 @@ public class ValidationUtil {
 			try {
 				Integer num = Integer.parseInt(number);
 				if (num < min) {
-					ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 				}
 				if(num > max){
-					ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 				}
 				if(patterns.length!=0){//格式校验
 					for (String pattern : patterns) {
@@ -481,7 +486,7 @@ public class ValidationUtil {
 							return num;
 						}
 					}
-					ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 				}
 				return num;
 			} catch (NumberFormatException e) {
@@ -489,10 +494,10 @@ public class ValidationUtil {
 			}
 		} catch (Exception e) {
 			if (e instanceof NullPointerException) {
-				ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			if (e instanceof NumberFormatException) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (e instanceof OutOfRangeException) {
 				throw new OutOfRangeException(e.getMessage());
@@ -501,13 +506,13 @@ public class ValidationUtil {
 			try {
 				num = Integer.class.cast(obj);
 			} catch (Exception e1) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (num < min) {
-				ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 			}
 			if(num > max){
-				ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 			}
 			if(patterns.length!=0){//格式校验
 				for (String pattern : patterns) {
@@ -515,7 +520,7 @@ public class ValidationUtil {
 						return num;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			return num;
 		}
@@ -536,11 +541,14 @@ public class ValidationUtil {
 	 * @date 2017年12月26日 下午3:48:40
 	 */
 	public static final int checkRangeAndAssignInt(final Integer intValue, int min, int max, int lang, final String...patterns) {
+		if(intValue == null){
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.PARAMETER_LOST));
+		}
 		if (intValue < min) {
-			ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 		}
 		if(intValue > max){
-			ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 		}
 		if(patterns.length!=0){//格式校验
 			for (String pattern : patterns) {
@@ -548,7 +556,7 @@ public class ValidationUtil {
 					return intValue;
 				}
 			}
-			ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 		}
 		return intValue;
 	}
@@ -691,10 +699,10 @@ public class ValidationUtil {
 			try {
 				Integer num = Integer.parseInt(number);
 				if (num < Integer.MIN_VALUE) {
-					ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,Integer.MIN_VALUE);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+Integer.MIN_VALUE);
 				}
 				if(num > Integer.MAX_VALUE){
-					ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,Integer.MAX_VALUE);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+Integer.MAX_VALUE);
 				}
 				if(patterns.length!=0){//格式校验
 					for (String pattern : patterns) {
@@ -702,7 +710,7 @@ public class ValidationUtil {
 							return num;
 						}
 					}
-					ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 				}
 				return num;
 			} catch (NumberFormatException e) {
@@ -713,7 +721,7 @@ public class ValidationUtil {
 				return null;
 			}
 			if (e instanceof NumberFormatException) {
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			if (e instanceof OutOfRangeException) {
 				throw new OutOfRangeException(e.getMessage());
@@ -722,13 +730,13 @@ public class ValidationUtil {
 			try {
 				num = Integer.class.cast(obj);
 			} catch (Exception e1) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (num < Integer.MIN_VALUE) {
-				ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,Integer.MIN_VALUE);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+Integer.MIN_VALUE);
 			}
 			if(num > Integer.MAX_VALUE){
-				ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,Integer.MAX_VALUE);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+Integer.MAX_VALUE);
 			}
 			if(patterns.length!=0){//格式校验
 				for (String pattern : patterns) {
@@ -736,7 +744,7 @@ public class ValidationUtil {
 						return num;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			return num;
 		}
@@ -769,10 +777,10 @@ public class ValidationUtil {
 			try {
 				Double num = Double.parseDouble(number);
 				if (num < min) {
-					ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 				}
 				if(num > max){
-					ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 				}
 				if(patterns.length!=0){//格式校验
 					for (String pattern : patterns) {
@@ -780,7 +788,7 @@ public class ValidationUtil {
 							return num;
 						}
 					}
-					ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 				}
 				return num;
 			} catch (NumberFormatException e) {
@@ -788,10 +796,10 @@ public class ValidationUtil {
 			}
 		} catch (Exception e) {
 			if (e instanceof NullPointerException) {
-				ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			if (e instanceof NumberFormatException) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (e instanceof OutOfRangeException) {
 				throw new OutOfRangeException(e.getMessage());
@@ -800,13 +808,13 @@ public class ValidationUtil {
 			try {
 				num = Double.parseDouble(String.valueOf(obj));
 			} catch (Exception e1) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (num < min) {
-				ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 			}
 			if(num > max){
-				ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 			}
 			if(patterns.length!=0){//格式校验
 				for (String pattern : patterns) {
@@ -814,7 +822,7 @@ public class ValidationUtil {
 						return num;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			return num;
 		}
@@ -840,10 +848,10 @@ public class ValidationUtil {
 			ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
 	}
 		if (doubleValue < min) {
-			ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 		}
 		if(doubleValue > max){
-			ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 		}
 		if(patterns.length!=0){//格式校验
 			for (String pattern : patterns) {
@@ -851,9 +859,14 @@ public class ValidationUtil {
 					return doubleValue;
 				}
 			}
-			ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 		}
 		return doubleValue;
+	}
+
+	public static void main(String[] args) {
+		LangConfig.setLang(1);
+		checkAndAssignDouble(-1d);
 	}
 
 	public static final double checkRangeAndAssignDouble(final Double doubleValue, double min, double max,final String...patterns) {
@@ -962,10 +975,10 @@ public class ValidationUtil {
 	 * @date 2017年12月26日 下午3:48:40
 	 */
 	public static final double checkAndAssignDouble(final Double doubleValue, final String...patterns) {
-		return checkRangeAndAssignDouble(doubleValue,Double.MIN_VALUE,Double.MAX_VALUE,patterns);
+		return checkRangeAndAssignDouble(doubleValue,-Double.MAX_VALUE,Double.MAX_VALUE,patterns);
 	}
 	public static final double checkAndAssignDouble(final Double doubleValue, int lang, final String...patterns) {
-		return checkRangeAndAssignDouble(doubleValue,Double.MIN_VALUE,Double.MAX_VALUE,lang,patterns);
+		return checkRangeAndAssignDouble(doubleValue,-Double.MAX_VALUE,Double.MAX_VALUE,lang,patterns);
 	}
 
 	/**
@@ -990,10 +1003,10 @@ public class ValidationUtil {
 			try {
 				Long num = Long.parseLong(number);
 				if (num < min) {
-					ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 				}
 				if(num > max){
-					ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 				}
 				if(patterns.length!=0){//格式校验
 					for (String pattern : patterns) {
@@ -1001,7 +1014,7 @@ public class ValidationUtil {
 							return num;
 						}
 					}
-					ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+					throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 				}
 				return num;
 			} catch (NumberFormatException e) {
@@ -1009,10 +1022,10 @@ public class ValidationUtil {
 			}
 		} catch (Exception e) {
 			if (e instanceof NullPointerException) {
-				ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			if (e instanceof NumberFormatException) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (e instanceof OutOfRangeException) {
 				throw new OutOfRangeException(e.getMessage());
@@ -1021,13 +1034,13 @@ public class ValidationUtil {
 			try {
 				num=Long.parseLong(String.valueOf(obj));
 			} catch (Exception e1) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			if (num < min) {
-				ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 			}
 			if(num > max){
-				ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 			}
 			if(patterns.length!=0){//格式校验
 				for (String pattern : patterns) {
@@ -1035,7 +1048,7 @@ public class ValidationUtil {
 						return num;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			return num;
 		}
@@ -1056,11 +1069,14 @@ public class ValidationUtil {
 	 * @date 2017年12月26日 下午3:48:40
 	 */
 	public static final long checkRangeAndAssignLong(final Long longValue, long min, long max, int lang,final String...patterns) {
+		if(longValue ==null){
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.PARAMETER_LOST));
+		}
 		if (longValue < min) {
-			ExceptionUtils.throwException(ErrorMsg.GREATER_THAN_OR_EQUAL,lang,min);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GREATER_THAN_OR_EQUAL)+min);
 		}
 		if(longValue > max){
-			ExceptionUtils.throwException(ErrorMsg.LESS_THAN_OR_EQUAL,lang,max);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.LESS_THAN_OR_EQUAL)+max);
 		}
 		if(patterns.length!=0){//格式校验
 			for (String pattern : patterns) {
@@ -1068,7 +1084,7 @@ public class ValidationUtil {
 					return longValue;
 				}
 			}
-			ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 		}
 		return longValue;
 	}
@@ -1207,15 +1223,15 @@ public class ValidationUtil {
 						return str;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			return str;
 		} catch (Exception e) {
 			if(e instanceof NullPointerException){
-				ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			if(e instanceof ClassCastException){
-				ExceptionUtils.throwException(ErrorMsg.CAST_STRING_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CAST_STRING_EXCEPTION));
 			}
 			throw new RuntimeException();
 		}
@@ -1242,7 +1258,7 @@ public class ValidationUtil {
 			}
 			String str=String.class.cast(obj);
 			if("".equals(str)){
-				ExceptionUtils.throwException(ErrorMsg.EMPTY_STRING,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.EMPTY_STRING));
 			}
 			if(patterns.length!=0){//格式校验
 				for (String pattern : patterns) {
@@ -1250,15 +1266,15 @@ public class ValidationUtil {
 						return str;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			return str;
 		} catch (Exception e) {
 			if(e instanceof NullPointerException){
-				ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			if(e instanceof ClassCastException){
-				ExceptionUtils.throwException(ErrorMsg.CAST_STRING_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CAST_STRING_EXCEPTION));
 			}
 			throw new RuntimeException(e.getMessage());
 		}
@@ -1281,11 +1297,11 @@ public class ValidationUtil {
 	public static final String checkBlankAndAssignString(final Object obj,int lang,final String...patterns){
 		try {
 			if (obj == null) {
-				ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			String str=String.class.cast(obj);
 			if("".equals(str.trim())){
-				ExceptionUtils.throwException(ErrorMsg.EMPTY_STRING,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.EMPTY_STRING));
 			}
 			if(patterns.length != 0){//格式校验
 				for (String pattern : patterns) {
@@ -1293,15 +1309,15 @@ public class ValidationUtil {
 						return str;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			return str;
 		} catch (Exception e) {
 			if(e instanceof NullPointerException){
-				ExceptionUtils.throwException(ErrorMsg.NULL_POINT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			if(e instanceof ClassCastException){
-				ExceptionUtils.throwException(ErrorMsg.CAST_STRING_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty("CAST_STRING_EXCEPTION"));
 			}
 			throw new RuntimeException(e.getMessage());
 		}
@@ -1336,12 +1352,11 @@ public class ValidationUtil {
 						return str;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			return str;
 		} catch (Exception e) {
-			ExceptionUtils.throwException(ErrorMsg.CAST_STRING_EXCEPTION,lang);
-			return null;
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CAST_STRING_EXCEPTION));
 		}
 	}
 
@@ -1373,12 +1388,11 @@ public class ValidationUtil {
 						return str;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 			return str;
 		} catch (Exception e) {
-			ExceptionUtils.throwException(ErrorMsg.CAST_STRING_EXCEPTION,lang);
-			return null;
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CAST_STRING_EXCEPTION));
 		}
 	}
 
@@ -1396,7 +1410,7 @@ public class ValidationUtil {
 	* @date 2017年12月27日 下午1:51:43
 	 */
 	public static final int checkAndAssignDefaultInt(final Object obj,int lang ,int defaultInt){
-		String number = null;
+		String number;
 		try {
 			if (obj == null) {
 				return defaultInt;
@@ -1412,13 +1426,13 @@ public class ValidationUtil {
 			}
 		} catch (Exception e) {
 			if (e instanceof NumberFormatException) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			Integer num = null;
 			try {
 				num = Integer.class.cast(obj);
 			} catch (Exception e1) {
-				ExceptionUtils.throwException(ErrorMsg.CAST_INTEGER_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CAST_INTEGER_EXCEPTION));
 			}
 			return num;
 		}
@@ -1440,7 +1454,7 @@ public class ValidationUtil {
 	* @date 2017年12月27日 下午1:51:43
 	 */
 	public static final long checkAndAssignDefaultLong(final Object obj,int lang,final long defaultLong){
-		String number = null;
+		String number;
 		try {
 			if (obj == null) {
 				return defaultLong;
@@ -1456,13 +1470,13 @@ public class ValidationUtil {
 			}
 		} catch (Exception e) {
 			if (e instanceof NumberFormatException) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			Long num = null;
 			try {
 				num=Long.parseLong(String.valueOf(obj));
 			} catch (Exception e1) {
-				ExceptionUtils.throwException(ErrorMsg.CAST_LONG_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CAST_LONG_EXCEPTION));
 			}
 			return num;
 		}
@@ -1483,7 +1497,7 @@ public class ValidationUtil {
 	* @date 2017年12月27日 下午1:51:43
 	 */
 	public static final Integer checkAndAssignNullIntegerIfIsBlank(final Object obj,int lang){
-		String number = null;
+		String number;
 		try {
 			if (obj == null) {
 				return null;
@@ -1499,13 +1513,13 @@ public class ValidationUtil {
 			}
 		} catch (Exception e) {
 			if (e instanceof NumberFormatException) {
-				ExceptionUtils.throwException(ErrorMsg.NUMBER_PARSE_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NUMBER_PARSE_EXCEPTION));
 			}
 			Integer num = null;
 			try {
 				num=Integer.parseInt(String.valueOf(obj));
 			} catch (Exception e1) {
-				ExceptionUtils.throwException(ErrorMsg.CAST_INTEGER_EXCEPTION,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CAST_INTEGER_EXCEPTION));
 			}
 			return num;
 		}
@@ -1530,7 +1544,7 @@ public class ValidationUtil {
 		try {
 			String str=String.class.cast(obj);
 			if(null==str) {
-				ExceptionUtils.throwException(ErrorMsg.EMPTY_STRING,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.EMPTY_STRING));
 			}
 			if(patterns.length!=0){//格式校验
 				for (String pattern : patterns) {
@@ -1538,7 +1552,7 @@ public class ValidationUtil {
 						return;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
@@ -1564,10 +1578,10 @@ public class ValidationUtil {
 		try {
 			String str=String.class.cast(obj);
 			if(null==str) {
-				ExceptionUtils.throwException(ErrorMsg.EMPTY_STRING,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.EMPTY_STRING));
 			}
 			if("".equals(str)) {
-				ExceptionUtils.throwException(ErrorMsg.EMPTY_STRING,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.EMPTY_STRING));
 			}
 			//格式校验
 			if(patterns.length!=0){
@@ -1576,7 +1590,7 @@ public class ValidationUtil {
 						return;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
@@ -1602,10 +1616,10 @@ public class ValidationUtil {
 		try {
 			String str=String.class.cast(obj);
 			if (null==str) {
-				ExceptionUtils.throwException(ErrorMsg.EMPTY_STRING,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.EMPTY_STRING));
 			}
 			if ("".equals(str.trim())) {
-				ExceptionUtils.throwException(ErrorMsg.EMPTY_STRING,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.EMPTY_STRING));
 			}
 			//格式校验
 			if(patterns.length!=0){
@@ -1614,7 +1628,7 @@ public class ValidationUtil {
 						return;
 					}
 				}
-				ExceptionUtils.throwException(ErrorMsg.WRONG_FORMAT,lang);
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_FORMAT));
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
@@ -1631,7 +1645,7 @@ public class ValidationUtil {
 	 */
 	public static final void checkNullInteger(Integer integer,int lang){
 		if(integer==null){
-			ExceptionUtils.throwException(ErrorMsg.NULL_INTEGER,lang);
+			throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_INTEGER));
 		}
 	}
 	public static final void checkNullInteger(Integer integer){
@@ -1654,11 +1668,7 @@ public class ValidationUtil {
 	}
 	
 	
-	public static void main(String[] args) {
-		System.out.println(checkAndAssignNullIntegerIfIsBlank(" "));
-	}
-	
-	
+
 }
 
 class OutOfRangeException extends RuntimeException{

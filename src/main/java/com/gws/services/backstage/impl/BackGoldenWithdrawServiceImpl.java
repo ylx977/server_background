@@ -1,30 +1,24 @@
 package com.gws.services.backstage.impl;
 
-import com.gws.common.constants.backstage.CoinType;
-import com.gws.common.constants.backstage.GoldenWithDrawEnum;
-import com.gws.common.constants.backstage.SymbolId;
+import com.gws.common.constants.backstage.*;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.*;
 import com.gws.repositories.master.backstage.BackGoldenCodeMaster;
 import com.gws.repositories.master.backstage.BackGoldenWithdrawMaster;
 import com.gws.repositories.query.backstage.BackGoldenCodeQuery;
 import com.gws.repositories.query.backstage.BackGoldenWithdarwQuery;
-import com.gws.repositories.query.backstage.UsdgOfficialAccountQuery;
-import com.gws.repositories.query.backstage.UsdgUserAccountQuery;
-import com.gws.repositories.slave.backstage.BackGoldenCodeSlave;
-import com.gws.repositories.slave.backstage.BackGoldenWithdrawSlave;
-import com.gws.repositories.slave.backstage.FrontUserAccountSlave;
-import com.gws.repositories.slave.backstage.UsdgOfficialAccountSlave;
+import com.gws.repositories.slave.backstage.*;
 import com.gws.services.backstage.BackGoldenWithdrawService;
-import com.gws.utils.blockchain.BlockUtils;
-import com.gws.utils.blockchain.Protobuf4EdsaUtils;
-import com.gws.utils.blockchain.ProtobufBean;
 import com.gws.utils.cache.IdGlobalGenerator;
 import com.gws.utils.decimal.DecimalUtil;
 import com.gws.utils.http.ConfReadUtil;
+import com.gws.utils.http.LangReadUtil;
+import com.gws.utils.transfer.TransferCoin;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,9 +31,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.math.RoundingMode;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import com.gws.utils.sql.*;
 
 /**
  * @author ylx
@@ -64,15 +60,51 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
 
     private final UsdgOfficialAccountSlave usdgOfficialAccountSlave;
 
+    private final UserContractSlave userContractSlave;
+
+    private final SQLUtilsss sqlUtilsss;
+
     private String BankAddress = ConfReadUtil.getProperty("blockchain.bankPubkey");
 
     private String BankPrikey = ConfReadUtil.getProperty("blockchain.bankPrikey");
+
+    /**
+     * 平台BTY地址
+     */
+    @Value("${platform.bty.address}")
+    private String platformBtyAddress;
+    @Value("${platform.bty.seed}")
+    private String platformBtySeed;
+    @Value("${platform.bty.privatekey}")
+    private String platformBtyPrivatekey;
+    @Value("${platform.bty.publickey}")
+    private String platformBtyPublickey;
+    @Value("${platform.bty.pubkey}")
+    private String platformBtyPubkey;
+    @Value("${platform.bty.prikey}")
+    private String platformBtyPrikey;
+
+    /**
+     * 平台USDG地址
+     */
+    @Value("${platform.usdg.address}")
+    private String platformUsdgAddress;
+    @Value("${platform.usdg.seed}")
+    private String platformUsdgSeed;
+    @Value("${platform.usdg.privatekey}")
+    private String platformUsdgPrivatekey;
+    @Value("${platform.usdg.publickey}")
+    private String platformUsdgPublickey;
+    @Value("${platform.usdg.pubkey}")
+    private String platformUsdgPubkey;
+    @Value("${platform.usdg.prikey}")
+    private String platformUsdgPrikey;
 
     @PersistenceContext
     private EntityManager em;
 
     @Autowired
-    public BackGoldenWithdrawServiceImpl(BackGoldenWithdrawSlave backGoldenWithdrawSlave, BackGoldenWithdrawMaster backGoldenWithdrawMaster, BackGoldenCodeSlave backGoldenCodeSlave, BackGoldenCodeMaster backGoldenCodeMaster, IdGlobalGenerator idGlobalGenerator, FrontUserAccountSlave frontUserAccountSlave, UsdgOfficialAccountSlave usdgOfficialAccountSlave) {
+    public BackGoldenWithdrawServiceImpl(BackGoldenWithdrawSlave backGoldenWithdrawSlave, BackGoldenWithdrawMaster backGoldenWithdrawMaster, BackGoldenCodeSlave backGoldenCodeSlave, BackGoldenCodeMaster backGoldenCodeMaster, IdGlobalGenerator idGlobalGenerator, FrontUserAccountSlave frontUserAccountSlave, UsdgOfficialAccountSlave usdgOfficialAccountSlave, UserContractSlave userContractSlave, SQLUtilsss sqlUtilsss) {
         this.backGoldenWithdrawSlave = backGoldenWithdrawSlave;
         this.backGoldenWithdrawMaster = backGoldenWithdrawMaster;
         this.backGoldenCodeSlave = backGoldenCodeSlave;
@@ -80,6 +112,8 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
         this.idGlobalGenerator = idGlobalGenerator;
         this.frontUserAccountSlave = frontUserAccountSlave;
         this.usdgOfficialAccountSlave = usdgOfficialAccountSlave;
+        this.userContractSlave = userContractSlave;
+        this.sqlUtilsss = sqlUtilsss;
     }
 
     @Override
@@ -129,24 +163,27 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
         //获取该提取单的详细信息
         GoldenWithdraw one = backGoldenWithdrawSlave.findOne(id);
         Integer status = one.getStatus();
-        if(!GoldenWithDrawEnum.APPLY.getStatus().equals(status)){
-            throw new RuntimeException("该黄金提取单已经被申请提取过了");
+        if(GoldenWithDrawEnum.TO_WITHDRAW.getStatus().equals(status)||
+           GoldenWithDrawEnum.CHECKOUT.getStatus().equals(status)||
+           GoldenWithDrawEnum.TO_AUDIT.getStatus().equals(status)||
+           GoldenWithDrawEnum.WITHDRAW_FAIL.getStatus().equals(status)){
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.ORDER_NOT_IN_APPLY));
         }
 
-        //黄金编号重复检查？================>>>TODO
+        //黄金编号重复检查？================>>>TODO，index helps
 
         //查看编号数量和对应的份数是否一致
         List<String> goldenCodes = goldenWithdrawBO.getGoldenCodes();
         Integer withdrawAmount = one.getWithdrawAmount();
         if(!withdrawAmount.equals(goldenCodes.size())){
-            throw new RuntimeException("黄金编号的数量和提取的份数不一致");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GOLDE_CODES_NUM_INCONSISTENT));
         }
 
         //检查黄金提取时间是否大于当前时间(否则该订单不能成功)
         Integer currentTime = (int)(System.currentTimeMillis()/1000);
         Integer withdrawTime = one.getWithdrawTime();
         if(withdrawTime <= currentTime){
-            throw new RuntimeException("提取黄金时间必须大于当前时间");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_WITHDRAW_TIME));
         }
 
         //改当前提取信息的状态
@@ -161,9 +198,21 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
             backGoldenCode.setId(idGlobalGenerator.getSeqId(BackGoldenCode.class));
             backGoldenCode.setGoldenCode(goldenCode);
             backGoldenCode.setGoldenWithdrawId(id);
+            backGoldenCode.setCtime(currentTime);
+            backGoldenCode.setUtime(currentTime);
             backGoldenCodeList.add(backGoldenCode);
         }
-        backGoldenCodeMaster.save(backGoldenCodeList);
+        int success = 0;
+        try {
+            success = sqlUtilsss.executeInsertMany(backGoldenCodeList);
+            System.out.println("执行成功条数："+success);
+        } catch (Exception e) {
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.DUPLICATE_GOLD_CODE));
+        }
+        if(!withdrawAmount.equals(success)){
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GOLDE_CODES_NUM_INCONSISTENT));
+        }
+//        backGoldenCodeMaster.save(backGoldenCodeList);
     }
 
     @Override
@@ -176,13 +225,13 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
         GoldenWithdraw one = backGoldenWithdrawSlave.findOne(id);
         Integer status = one.getStatus();
         if(!GoldenWithDrawEnum.TO_WITHDRAW.getStatus().equals(status)){
-            throw new RuntimeException("该黄金提取单还未处于待提取状态");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GOLD_ORDER_IN_TO_WITHDRAW));
         }
         //检查黄金提取时间是否已经过期
         Integer currentTime = (int)(System.currentTimeMillis()/1000);
         Integer withdrawTime = one.getWithdrawTime();
         if(withdrawTime <= currentTime){
-            throw new RuntimeException("您的黄金提取单已经过期");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.GOLD_ORDER_EXPIRE));
         }
         GoldenWithdraw goldenWithdraw = new GoldenWithdraw();
         goldenWithdraw.setStatus(GoldenWithDrawEnum.CHECKOUT.getStatus());
@@ -211,9 +260,14 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
         return overdues;
     }
 
+    /**
+     * 定时器的方法，不需要多国语言支持
+     * @param goldenWithdrawBO
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void dealWithOverdues(GoldenWithdrawBO goldenWithdrawBO) {
+    public void  dealWithOverdues(GoldenWithdrawBO goldenWithdrawBO) {
+        Long id = goldenWithdrawBO.getId();
         Long uid = goldenWithdrawBO.getUid();
         Double chargeUSDG = goldenWithdrawBO.getChargeUSDG();
         Integer payUSDG = goldenWithdrawBO.getPayUSDG();
@@ -222,13 +276,13 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
         //返还给可用资金部分
         Double backToUsable = DecimalUtil.add(payUSDG,halfCharge,8,RoundingMode.HALF_EVEN);
         //冻结金额部分扣除
-        Double minuxFreeze = DecimalUtil.add(payUSDG,chargeUSDG,8,RoundingMode.HALF_EVEN);
+        Double minusFreeze = DecimalUtil.add(payUSDG,chargeUSDG,8,RoundingMode.HALF_EVEN);
 
         //用户的账户变动
-        Query nativeQuery = em.createNativeQuery("UPDATE usdg_user_account SET real_amount = real_amount-?,usable_amount = usable_amount+?,freeze_amount = freeze_amount-? WHERE uid=? AND type=?");
+        Query nativeQuery = em.createNativeQuery("UPDATE usdg_user_account SET real_amount = real_amount-?,usable_amount = usable_amount + ?,freeze_amount = freeze_amount - ? WHERE uid=? AND type=?");
         nativeQuery.setParameter(1,halfCharge);
         nativeQuery.setParameter(2,backToUsable);
-        nativeQuery.setParameter(3,minuxFreeze);
+        nativeQuery.setParameter(3,minusFreeze);
         nativeQuery.setParameter(4,uid);
         nativeQuery.setParameter(5,CoinType.USDG);
         int success = nativeQuery.executeUpdate();
@@ -238,7 +292,7 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
         }
 
         //平台的账户变动
-        Query nativeQuery2 = em.createNativeQuery("UPDATE usdg_officila_account SET real_amount = real_amount+?,usable_amount = usable_amount+? WHERE type=?");
+        Query nativeQuery2 = em.createNativeQuery("UPDATE usdg_official_account SET real_amount = real_amount + ?,usable_amount = usable_amount + ? WHERE type=?");
         nativeQuery2.setParameter(1,halfCharge);
         nativeQuery2.setParameter(2,halfCharge);
         nativeQuery2.setParameter(3,CoinType.USDG);
@@ -248,52 +302,71 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
             throw new RuntimeException("更新平台账户信息失败");
         }
 
-        UsdgUserAccountQuery usdgUserAccountQuery = new UsdgUserAccountQuery();
-        usdgUserAccountQuery.setUid(uid);
-        usdgUserAccountQuery.setType(CoinType.USDG);
-        //用户的账户信息
-        UsdgUserAccount userAccount = frontUserAccountSlave.findOne(usdgUserAccountQuery);
-        String publicKey = userAccount.getPublicKey();
-        String privateKey = userAccount.getPrivateKey();
-        UsdgOfficialAccountQuery usdgOfficialAccountQuery = new UsdgOfficialAccountQuery();
-        usdgOfficialAccountQuery.setType(CoinType.USDG);
-        UsdgOfficialAccount officialAccount = usdgOfficialAccountSlave.findOne(usdgOfficialAccountQuery);
-        String officialPubKey = officialAccount.getPublicKey();
-        long amount = (long)(DecimalUtil.multiply(halfCharge,100000000,8,RoundingMode.HALF_EVEN));
-
-
-        //====================================================》todo 第1次调用区块链接口，用户打给银行
-        ProtobufBean protobufBean = Protobuf4EdsaUtils.requestTransfer(privateKey, SymbolId.USDG, publicKey, BankAddress, amount);
-        String jsonResult = BlockUtils.sendPostParam(protobufBean);
-        boolean flag = BlockUtils.vilaResult(jsonResult);
-        if(!flag){
-            String errorMessage = BlockUtils.getErrorMessage(jsonResult);
-            LOGGER.error("区块链出错:"+errorMessage);
-            throw new RuntimeException();
+        //用户提取的黄金单子状态改成【提取失败】
+        Query nativeQuery3 = em.createNativeQuery("UPDATE back_golden_withdraw SET status = ? WHERE id=?");
+        nativeQuery3.setParameter(1,GoldenWithDrawEnum.WITHDRAW_FAIL.getStatus());
+        nativeQuery3.setParameter(2,id);
+        int success3 = nativeQuery3.executeUpdate();
+        if(success3 == 0){
+            LOGGER.error("更新黄金单号状态失败");
+            throw new RuntimeException("更新黄金单号状态失败");
         }
 
-        //====================================================》todo 第2次调用区块链接口，用户打给银行
-        ProtobufBean protobufBean2 = Protobuf4EdsaUtils.requestTransfer(BankPrikey, SymbolId.USDG, BankAddress, officialPubKey, amount);
-        String jsonResult2 = BlockUtils.sendPostParam(protobufBean2);
-        boolean flag2 = BlockUtils.vilaResult(jsonResult2);
-        if(!flag2){
-            String errorMessage = BlockUtils.getErrorMessage(jsonResult2);
-            LOGGER.error("区块链出错:"+errorMessage);
+        //用户合约里的公私钥信息
+        UserContract userContract = userContractSlave.findOne(uid);
 
-            //-------》todo 如果银行打给平台出错这里还要银行返回刚才用户打给银行的钱
-            ProtobufBean protobufBean3 = Protobuf4EdsaUtils.requestTransfer(BankPrikey, SymbolId.USDG, BankAddress, publicKey, amount);
-            String jsonResult3 = BlockUtils.sendPostParam(protobufBean3);
-            boolean flag3 = BlockUtils.vilaResult(jsonResult3);
-            if(!flag3){
-                String errorMessage3 = BlockUtils.getErrorMessage(jsonResult3);
-                LOGGER.error("区块链出错:"+errorMessage3);
-                //====>todo 这里再出错就麻烦了
-            }
+        //【走合约接口】
+        //走合约的私钥
+        String prikey = userContract.getPrivatekey();
+        //走合约的公钥
+        String pubkey = userContract.getPublickey();
 
-            throw new RuntimeException();
+        //走合约接口的方法从一个地址转入另外一个地址------TODO 走的是合约
+        TransferCoin.transferCoin(pubkey,prikey,platformUsdgPubkey,halfCharge,SymbolId.USDG);
+    }
+
+    @Override
+    public List<GoldenWithdraw> queryAllOverduesUnhandled() {
+        Integer currentTime = (int)(System.currentTimeMillis()/1000);
+        BackGoldenWithdarwQuery backGoldenWithdarwQuery = new BackGoldenWithdarwQuery();
+        backGoldenWithdarwQuery.setOverWithdrawTime(currentTime);
+        backGoldenWithdarwQuery.setStatus(GoldenWithDrawEnum.APPLY.getStatus());
+        List<GoldenWithdraw> overdues = backGoldenWithdrawSlave.findAll(backGoldenWithdarwQuery);
+        return overdues;
+    }
+
+    /**
+     * 定时器的方法，不需要多国语言支持
+     * @param goldenWithdrawBO
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void dealWithOverduesUnhandled(GoldenWithdrawBO goldenWithdrawBO) {
+        Long id = goldenWithdrawBO.getId();
+        Long uid = goldenWithdrawBO.getUid();
+        Double totalUSDG = goldenWithdrawBO.getTotalUSDG();
+
+        //用户的账户变动
+        Query nativeQuery = em.createNativeQuery("UPDATE usdg_user_account SET usable_amount = usable_amount + ?,freeze_amount = freeze_amount - ? WHERE uid=? AND type=?");
+        nativeQuery.setParameter(1,totalUSDG);
+        nativeQuery.setParameter(2,totalUSDG);
+        nativeQuery.setParameter(3,uid);
+        nativeQuery.setParameter(4,CoinType.USDG);
+        int success = nativeQuery.executeUpdate();
+        if(success == 0){
+            LOGGER.error("更新用户"+uid+"的USDG账户信息失败");
+            throw new RuntimeException("更新用户账户信息失败");
         }
 
-
+        //用户提取的黄金单子状态改成【提取失败】
+        Query nativeQuery2 = em.createNativeQuery("UPDATE back_golden_withdraw SET status = ? WHERE id=?");
+        nativeQuery2.setParameter(1,GoldenWithDrawEnum.WITHDRAW_FAIL.getStatus());
+        nativeQuery2.setParameter(2,id);
+        int success3 = nativeQuery2.executeUpdate();
+        if(success3 == 0){
+            LOGGER.error("更新黄金单号状态失败");
+            throw new RuntimeException("更新黄金单号状态失败");
+        }
 
     }
 }

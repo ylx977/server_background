@@ -50,12 +50,18 @@ public class UsdgOfficialAccount {
     @Column(name = "height")
     private Long height;
 
-    @Column(name = "index")
-    private Long index;
+    @Column(name = "indexes")
+    private Long indexes;
 
     @Column(name = "ctime")
     private Integer ctime;
 
     @Column(name = "utime")
     private Integer utime;
+
+    @Column(name = "prikey")
+    private String prikey;
+
+    @Column(name = "pubkey")
+    private String pubkey;
 }

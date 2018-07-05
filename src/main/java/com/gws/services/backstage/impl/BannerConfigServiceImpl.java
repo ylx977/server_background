@@ -1,15 +1,18 @@
 package com.gws.services.backstage.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.common.constants.backstage.RedisConfig;
 import com.gws.entity.backstage.BannerBO;
 import com.gws.entity.backstage.BannerConfig;
 import com.gws.entity.backstage.BannerTable;
 import com.gws.entity.backstage.BannerVO;
+import com.gws.exception.ExceptionUtils;
 import com.gws.repositories.master.backstage.BannerConfigMaster;
 import com.gws.repositories.slave.backstage.BannerConfigSlave;
 import com.gws.repositories.slave.backstage.BannerTableSlave;
 import com.gws.services.backstage.BannerConfigService;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.redis.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -69,17 +72,17 @@ public class BannerConfigServiceImpl implements BannerConfigService {
                     flag++;
                 }
                 if(flag == 0){
-                    throw new RuntimeException("播放顺序和播放间隔参数必须至少设置一个");
+                    throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.AT_LEAST_ONE_PARAMETER));
                 }
                 int success = bannerConfigMaster.updateById(bannerConfig, 1L, properties.toArray(new String[0]));
                 if(success == 0){
-                    throw new RuntimeException("更新基本配置失败");
+                    throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_BASIC_CONFIG_FAIL));
                 }
                 redisUtil.set(RedisConfig.BANNER_BASIC_CONFIG,JSON.toJSONString(one));
                 return;
             }else{
                 if(displayOrder == null || displayInterval == null){
-                    throw new RuntimeException("初次设置参数，播放顺序和播放间隔参数必须都设置");
+                    throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.FIRST_BASIC_CONFIG));
                 }
                 BannerConfig bannerConfig = new BannerConfig();
                 bannerConfig.setId(1L);
@@ -104,11 +107,11 @@ public class BannerConfigServiceImpl implements BannerConfigService {
             flag++;
         }
         if(flag == 0){
-            throw new RuntimeException("播放顺序和播放间隔参数必须至少设置一个");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.AT_LEAST_ONE_PARAMETER));
         }
         int success = bannerConfigMaster.updateById(bannerConfig, 1L, properties.toArray(new String[0]));
         if(success == 0){
-            throw new RuntimeException("更新基本配置失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_BASIC_CONFIG_FAIL));
         }
         redisUtil.delete(RedisConfig.BANNER_BASIC_CONFIG);
     }

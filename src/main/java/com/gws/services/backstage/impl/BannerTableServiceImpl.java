@@ -1,14 +1,17 @@
 package com.gws.services.backstage.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.entity.backstage.BannerTable;
 import com.gws.entity.backstage.upload.Move;
+import com.gws.exception.ExceptionUtils;
 import com.gws.repositories.master.backstage.BannerTableMaster;
 import com.gws.repositories.query.backstage.BannerTableQuery;
 import com.gws.repositories.slave.backstage.BannerTableSlave;
 import com.gws.services.backstage.BannerTableService;
 import com.gws.services.oss.AliossService;
 import com.gws.utils.cache.IdGlobalGenerator;
+import com.gws.utils.http.LangReadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -71,10 +74,11 @@ public class BannerTableServiceImpl implements BannerTableService {
                 Move move = moveList.get(i);
                 if(move.getId()==null){
                     Integer orders = move.getOrders();
+                    Integer fileOrder = move.getFileOrder();
                     BannerTable bannerTable = new BannerTable();
                     bannerTable.setId(idGlobalGenerator.getSeqId(BannerTable.class));
                     bannerTable.setOrders(orders);
-                    bannerTable.setBannerUrl(bannerUrls.get(i));
+                    bannerTable.setBannerUrl(bannerUrls.get(fileOrder-1));
                     insertBannerTableList.add(bannerTable);
                 }
                 if(move.getId()!=null){
@@ -110,12 +114,13 @@ public class BannerTableServiceImpl implements BannerTableService {
                 }
             }
             if(files.length != count){
-                throw new RuntimeException("文件上传数量与实际不一致");
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPLOAD_NUM_INCONSISTENT));
             }
             flag++;
         }
         if(flag==0){
-            throw new RuntimeException("参数不能全为空");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_PARAMETER));
+
         }
     }
 

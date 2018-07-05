@@ -1,9 +1,11 @@
 package com.gws.services.backstage.impl;
 
+import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.common.constants.backstage.RedisConfig;
 import com.gws.dto.backstage.BackAuthesVO;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.*;
+import com.gws.exception.ExceptionUtils;
 import com.gws.repositories.master.backstage.*;
 import com.gws.repositories.query.backstage.BackAuthgroupsAuthesQuery;
 import com.gws.repositories.query.backstage.BackAuthgroupsQuery;
@@ -11,6 +13,7 @@ import com.gws.repositories.query.backstage.BackUsersAuthgroupsQuery;
 import com.gws.repositories.slave.backstage.*;
 import com.gws.services.backstage.BackRoleService;
 import com.gws.utils.cache.IdGlobalGenerator;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.redis.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -129,12 +132,11 @@ public class BackRoleServiceImpl implements BackRoleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateRole(BackUserBO backUserBO) {
-
         BackAuthgroupsQuery backAuthgroupsQuery = new BackAuthgroupsQuery();
         backAuthgroupsQuery.setAuthgroupName(backUserBO.getRoleName());
         BackAuthgroups one = backAuthgroupsSlave.findOne(backAuthgroupsQuery);
         if(one != null){
-            throw new RuntimeException("角色名重复了");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.DUPLICATE_ROLENAME));
         }
 
         Long roleId = backUserBO.getRoleId();

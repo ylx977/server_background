@@ -79,4 +79,13 @@ public class KeyUtils {
         }
         return s;
     }
+
+    public static void main(String[] args) {
+        String privateKey1 = getPrivateKey1("1111");
+        System.out.println(privateKey1);
+        System.out.println(privateKey1.length());
+        String publicKey = getPublicKey(privateKey1);
+        System.out.println(publicKey);
+        System.out.println(publicKey.length());
+    }
 }

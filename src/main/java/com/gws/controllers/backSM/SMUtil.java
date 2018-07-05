@@ -7,6 +7,7 @@ import com.gws.exception.ExceptionUtils;
 import com.gws.utils.IPUtil;
 import com.gws.utils.http.ConfReadUtil;
 import com.gws.utils.http.HttpRequest;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.webservice.HashUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +98,7 @@ public class SMUtil {
      *
      * 返回true表示验证成功，返回false表示验证失败
      */
-    public static final boolean valiSMCode(String code, String phone,String ip,int lang){
+    public static final boolean valiSMCode(String code, String phone,String ip){
         String time = String.valueOf(System.currentTimeMillis()/1000);
         //参数的排列顺序是固定的，按照Arrays.sort排列
         String params = "code="+code+"&codetype="+CODE_TYPE+"&country="+COUNTRY+"&guide="+GUIDE+"&mobile="+phone+"&t="+T;
@@ -109,8 +110,7 @@ public class SMUtil {
             String message = smResult.getMessage();
             String error = smResult.getError();
             LOGGER.error("短信验证失败: {}",message+","+error);
-            ExceptionUtils.throwException(ErrorMsg.SM_ERROR,lang,error+","+message);
-            return false;
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.SM_ERROR)+error+","+message);
         }
         return true;
     }

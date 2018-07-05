@@ -1,11 +1,9 @@
 package com.gws.services.backstage.impl;
 
-import com.gws.common.constants.backstage.FrontUserApplyEnum;
-import com.gws.common.constants.backstage.FrontUserApplyStatusEnum;
-import com.gws.common.constants.backstage.FrontUserStatus;
-import com.gws.common.constants.backstage.RegexConstant;
+import com.gws.common.constants.backstage.*;
 import com.gws.dto.backstage.PageDTO;
 import com.gws.entity.backstage.*;
+import com.gws.exception.ExceptionUtils;
 import com.gws.repositories.master.backstage.FrontUserApplyInfoMaster;
 import com.gws.repositories.master.backstage.FrontUserMaster;
 import com.gws.repositories.query.backstage.FrontUserApplyInfoQuery;
@@ -15,6 +13,7 @@ import com.gws.repositories.slave.backstage.FrontUserApplyInfoSlave;
 import com.gws.repositories.slave.backstage.FrontUserIdentitySlave;
 import com.gws.repositories.slave.backstage.FrontUserSlave;
 import com.gws.services.backstage.FrontUserService;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.validate.ValidationUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,10 +188,10 @@ public class FrontUserServiceImpl implements FrontUserService {
         //先查询该申请信息进行检查
         FrontUserApplyInfo one = frontUserApplyInfoSlave.findOne(id);
         if(null == one){
-            throw new RuntimeException("该申请单不存在");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.APPLY_ORDER_NOT_EXIST));
         }
         if(!one.getApplyStatus().equals(FrontUserApplyStatusEnum.TO_CHECK.getCode())){
-            throw new RuntimeException("该申请单已经审核过了");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.APPLY_ORDER_FINISHED));
         }
 
         Integer changeType = one.getChangeType();
@@ -204,12 +203,12 @@ public class FrontUserServiceImpl implements FrontUserService {
         //确保不是去修改已经被删除的用户信息
         frontUserQuery.setUserStatus(FrontUserStatus.NORMAL);
 
-        //如果是修改手机
+        /*//如果是修改手机
         if(FrontUserApplyEnum.PHONE.getCode().equals(changeType)){
             FrontUser frontUser = new FrontUser();
             frontUser.setPhoneNumber(one.getNewInfo());
             success = frontUserMaster.update(frontUser, frontUserQuery,"phoneNumber");
-        }
+        }*/
 
         //如果是修改邮箱
         if(FrontUserApplyEnum.EMAIL.getCode().equals(changeType)){
@@ -218,7 +217,7 @@ public class FrontUserServiceImpl implements FrontUserService {
             success = frontUserMaster.update(frontUser, frontUserQuery,"emailAddress");
         }
         if(success == 0){
-            throw new RuntimeException("更新用户信息失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_USER_INFO_FAIL));
         }
 
         //再将申请信息的状态改成同意状态
@@ -226,7 +225,7 @@ public class FrontUserServiceImpl implements FrontUserService {
         frontUserApplyInfo.setApplyStatus(FrontUserApplyStatusEnum.APPROVE.getCode());
         int success2 = frontUserApplyInfoMaster.updateById(frontUserApplyInfo, id, "applyStatus");
         if(success2 == 0){
-            throw new RuntimeException("更新状态失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_STATUS_FAIL));
         }
 
     }
@@ -238,10 +237,10 @@ public class FrontUserServiceImpl implements FrontUserService {
         //先查询该申请信息进行检查
         FrontUserApplyInfo one = frontUserApplyInfoSlave.findOne(id);
         if(null == one){
-            throw new RuntimeException("该申请单不存在");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.APPLY_ORDER_NOT_EXIST));
         }
         if(!one.getApplyStatus().equals(FrontUserApplyStatusEnum.TO_CHECK.getCode())){
-            throw new RuntimeException("该申请单已经审核过了");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.APPLY_ORDER_FINISHED));
         }
 
         FrontUserApplyInfo frontUserApplyInfo = new FrontUserApplyInfo();
@@ -249,7 +248,7 @@ public class FrontUserServiceImpl implements FrontUserService {
         int success = frontUserApplyInfoMaster.updateById(frontUserApplyInfo, id, "applyStatus");
         System.out.println("success:"+success);
         if(success == 0){
-            throw new RuntimeException("更新状态失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_STATUS_FAIL));
         }
     }
 
@@ -262,18 +261,18 @@ public class FrontUserServiceImpl implements FrontUserService {
 
         FrontUser one = frontUserSlave.findOne(uid);
         if(FrontUserStatus.FREEZE.equals(one.getUserStatus())){
-            throw new RuntimeException("该用户已被删除");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.USER_DELETED));
         }
 
         FrontUser frontUser = new FrontUser();
         int flag = 0;
         List<String> properties = new ArrayList<>();
-        if(!StringUtils.isEmpty(phoneNumber)){
-            ValidationUtil.checkBlankString(phoneNumber, RegexConstant.PHONE_REGEX);
-            frontUser.setPhoneNumber(phoneNumber);
-            properties.add("phoneNumber");
-            flag++;
-        }
+//        if(!StringUtils.isEmpty(phoneNumber)){
+//            ValidationUtil.checkBlankString(phoneNumber, RegexConstant.PHONE_REGEX);
+//            frontUser.setPhoneNumber(phoneNumber);
+//            properties.add("phoneNumber");
+//            flag++;
+//        }
 
         if(!StringUtils.isEmpty(email)){
             ValidationUtil.checkBlankString(email, RegexConstant.EMAIL_REGEX);
@@ -283,12 +282,12 @@ public class FrontUserServiceImpl implements FrontUserService {
         }
 
         if(flag == 0){
-            throw new RuntimeException("请填写必要的参数信息");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.INPUT_ESSENTIAL_INFOS));
         }
 
         int success = frontUserMaster.updateById(frontUser, uid, properties.toArray(new String[0]));
         if(success == 0){
-            throw new RuntimeException("更新用户信息失败");
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.UPDATE_USER_INFO_FAIL));
         }
     }
 

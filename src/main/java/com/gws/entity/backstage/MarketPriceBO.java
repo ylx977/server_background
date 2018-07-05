@@ -10,9 +10,28 @@ import lombok.Data;
 public class MarketPriceBO {
 
     /**
-     * 多少人民币/1新加坡元
+     * 多少人民币/1新加坡元--->买入价
      */
-    private Double cnysgd;
+    private Double buyCnySgd;
+
+    /**
+     * 多少人民币/1新加坡元--->卖出价
+     */
+    private Double sellCnySgd;
+
+    /**
+     * 多少新元/1美元--->买入价
+     */
+    private Double buySgdUsd;
+
+    /**
+     * 多少新元/1美元--->卖出价
+     */
+    private Double sellSgdUsd;
+
+    private Double buyBtyUsdg;
+    private Double sellBtyUsdg;
+    private Double tradeFee;
 
     /**
      * 买入点差
@@ -20,10 +39,14 @@ public class MarketPriceBO {
     private Double buySpread;
 
     /**
-     * 买入点差
+     * 卖出点差
      */
     private Double sellSpread;
 
     private Integer lang;
+
+    private Integer page;
+
+    private Integer rowNum;
 
 }

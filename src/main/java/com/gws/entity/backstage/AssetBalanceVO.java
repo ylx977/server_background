@@ -25,7 +25,7 @@ public class AssetBalanceVO {
     private Double totalUsdgAmount;
 
     /**
-     * 平台账户的usdg数量
+     * 平台账户的usdg库存数量
      */
     private Double usdgBalance;
 

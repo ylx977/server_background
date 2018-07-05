@@ -72,5 +72,11 @@ public class FrontUserWithdrawApply {
     @Column(name = "utime")
     private Integer utime;
 
+    @Column(name = "history_num")
+    private Integer historyNum;
+
+    @Column(name = "today_total")
+    private Double todayTotal;
+
 
 }

@@ -3,11 +3,13 @@ package com.gws.interceptor.backstage;
 import com.alibaba.fastjson.JSON;
 import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.common.constants.backstage.HintMessage;
+import com.gws.configuration.backstage.LangConfig;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
 import com.gws.enums.SystemCode;
 import com.gws.exception.ExceptionUtils;
 import com.gws.services.backstage.BackUserService;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.validate.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,29 +35,28 @@ public class TokenInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        Integer lang = (Integer)(request.getAttribute("lang"));
         try {
             LOGGER.info("对用户的token信息进行校验");
             String tokenAndUserId = request.getHeader("Authorization");
             //请求头不能为null
             if(tokenAndUserId == null||"".equals(tokenAndUserId.trim())){
-                ExceptionUtils.throwException(ErrorMsg.NULL_AUTH,lang);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_AUTH));
             }
             //token校验
-            String token = ValidationUtil.checkBlankAndAssignString(tokenAndUserId.split("&")[0].replace("Bearer", ""),lang);
+            String token = ValidationUtil.checkBlankAndAssignString(tokenAndUserId.split("&")[0].replace("Bearer", ""));
             //账户id校验
-            Long uid = ValidationUtil.checkAndAssignLong(tokenAndUserId.split("&")[1],lang);
+            Long uid = ValidationUtil.checkAndAssignLong(tokenAndUserId.split("&")[1]);
             //校验userId和token值是否符合
             boolean flag = backUserService.verificationToken(uid, token);
             //token校验未通过
             if(!flag){
-                ExceptionUtils.throwException(ErrorMsg.TOKEN_FAIL,lang);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.TOKEN_FAIL));
             }
             return true;
         } catch (Exception e) {
             LOGGER.error("拦截token信息发生异常:{}",e.getMessage());
             PrintWriter writer = response.getWriter();
-            JsonResult jsonResult = BaseController.tokenError(e,lang);
+            JsonResult jsonResult = BaseController.tokenError(e);
             response.setContentType("application/json");
             writer.append(JSON.toJSONString(jsonResult));
             return false;

@@ -17,6 +17,7 @@ import com.gws.utils.IPUtil;
 import com.gws.utils.http.ConfReadUtil;
 import com.gws.utils.http.HTTP;
 import com.gws.utils.http.HttpRequest;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.validate.ValidationUtil;
 import com.gws.utils.webservice.HashUtil;
 import org.slf4j.Logger;
@@ -87,12 +88,11 @@ public class BackSMcontroller extends BaseController{
     @RequestMapping("/sendVerificationCode")
     public JsonResult sendVerificationCode(@RequestParam(name = "phone") String phone){
         LOGGER.info("匿名用户进行发送短信验证码操作");
-        Integer lang =(Integer) request.getAttribute("lang");
         try {
-            ValidationUtil.checkBlankAndAssignString(phone,lang, RegexConstant.PHONE_REGEX);
+            ValidationUtil.checkBlankAndAssignString(phone, RegexConstant.PHONE_REGEX);
         }catch (Exception e){
             LOGGER.error("匿名用户,详情:{}-->参数校验失败",e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             System.out.println(appKey);
@@ -110,10 +110,10 @@ public class BackSMcontroller extends BaseController{
                 String error = smResult.getError();
                 throw new RuntimeException(error+","+message);
             }
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("匿名用户,详情:{}-->操作失败",e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -129,18 +129,17 @@ public class BackSMcontroller extends BaseController{
     public JsonResult sendVerificationCodeByUsername(@RequestBody BackUserBO backUserBO){
         String username = backUserBO.getUsername();
         LOGGER.info("用户:{},进行发送短信验证码操作",username);
-        Integer lang =(Integer) request.getAttribute("lang");
         try {
-            ValidationUtil.checkBlankAndAssignString(username,lang, RegexConstant.USERNAME_REGEX);
+            ValidationUtil.checkBlankAndAssignString(username, RegexConstant.USERNAME_REGEX);
         }catch (Exception e){
             LOGGER.error("匿名用户,详情:{}-->参数校验失败",e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
             BackUser backUser = backUserService.queryUserByUsername(username);
             if(backUser==null){
                 LOGGER.warn("通过用户名发送短信操作，用户名不存在:{}",username);
-                return noUserError(lang);
+                return noUserError();
             }
 
             String phone = backUser.getContact();
@@ -157,16 +156,16 @@ public class BackSMcontroller extends BaseController{
                 if(!code.equals(200)){
                     String message = smResult.getMessage();
                     String error = smResult.getError();
-                    ExceptionUtils.throwException(ErrorMsg.SM_ERROR,lang,error+","+message);
+                    throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.SM_ERROR)+error+","+message);
                 }
             }else{
                 //如果不是正常手机号，不给发送
-                ExceptionUtils.throwException(ErrorMsg.WRONG_CONTACT,lang);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_CONTACT));
             }
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("匿名用户,详情:{}-->操作失败",e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 
@@ -184,29 +183,26 @@ public class BackSMcontroller extends BaseController{
      */
     @RequestMapping("/updateBackUserStatus")
     public JsonResult updateBackUserStatus(@RequestBody BackUserBO backUserBO){
-        Integer lang =(Integer) request.getAttribute("lang");
         LOGGER.info("匿名用户通过验证短信验证码的方式改变用户的");
         String username = backUserBO.getUsername();
         String phone = backUserBO.getPhone();
         String code = backUserBO.getCode();
         Integer isFreezed = backUserBO.getIsFreezed();
         try {
-            ValidationUtil.checkBlankAndAssignString(username,lang);
-            ValidationUtil.checkBlankAndAssignString(phone,lang, RegexConstant.PHONE_REGEX);
-            ValidationUtil.checkBlankAndAssignString(code,lang);
-            ValidationUtil.checkRangeAndAssignInt(isFreezed,0,1,lang);
+            ValidationUtil.checkBlankAndAssignString(username);
+            ValidationUtil.checkBlankAndAssignString(phone, RegexConstant.PHONE_REGEX);
+            ValidationUtil.checkBlankAndAssignString(code);
+            ValidationUtil.checkRangeAndAssignInt(isFreezed,0,1);
         }catch (Exception e){
             LOGGER.error("匿名用户,详情:{}-->参数校验失败",e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
         try {
-            backUserBO.setLang(lang);
-            backUserBO.setRequest(request);
             backSMService.updateBackUserStatus(backUserBO);
-            return success(null,lang);
+            return success(null);
         }catch (Exception e){
             LOGGER.error("匿名用户,详情:{}-->操作失败",e.getMessage());
-            return sysError(e,lang);
+            return sysError(e);
         }
     }
 

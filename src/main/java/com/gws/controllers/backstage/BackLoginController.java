@@ -19,7 +19,9 @@ import com.gws.services.backstage.BackUserService;
 import com.gws.utils.IPUtil;
 import com.gws.utils.http.ConfReadUtil;
 import com.gws.utils.http.HttpRequest;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.redis.RedisUtil;
+import com.gws.utils.token.TokenUtil;
 import com.gws.utils.validate.ValidationUtil;
 import com.gws.utils.webservice.HashUtil;
 import org.slf4j.Logger;
@@ -100,15 +102,13 @@ public class BackLoginController extends BaseController{
         String username = backUserBO.getUsername();
         String password = backUserBO.getPassword();
         LOGGER.info("用户名:{} 进行了登录",username);
-        Integer lang = ValidationUtil.getInteger(request.getHeader("lang"),1);
-        backUserBO.setLang(lang);
         try {
             //先进行用户名和密码的校验
-            ValidationUtil.checkBlankAndAssignString(username,lang,RegexConstant.USERNAME_REGEX);
-            ValidationUtil.checkBlankAndAssignString(password,lang,RegexConstant.PWD_REGEX);
+            ValidationUtil.checkBlankAndAssignString(username,RegexConstant.USERNAME_REGEX);
+            ValidationUtil.checkBlankAndAssignString(password,RegexConstant.PWD_REGEX);
         } catch (Exception e) {
             LOGGER.error("用户名:{},登录校验异常:{}",username,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
 
         //redis中key的值
@@ -122,7 +122,7 @@ public class BackLoginController extends BaseController{
                 LOGGER.warn("平台初始化，创建超级管理员:{}",username);
                 //创建超级管理员,和管理员,插入token,上区块链
                 UserDetailDTO userDetailDTO = backUserService.createAdmin(username,password,token);
-                return loginSuccess(userDetailDTO,lang);
+                return loginSuccess(userDetailDTO);
             }
 
             UserDetailDTO userDetailDTO;
@@ -131,9 +131,9 @@ public class BackLoginController extends BaseController{
                 LOGGER.info("用户:{},从redis获取了登录详细信息",username);
                 userDetailDTO = JSON.parseObject(userDetailDTOString, UserDetailDTO.class);
                 //缓存中的密码需要比对
-                if(!userDetailDTO.getPassword().equals(password)){
+                if(!userDetailDTO.getPassword().equals(HashUtil.hashPwd(password))){
                     LOGGER.error("用户名:{} 输入错误的账户名或密码",username);
-                    return loginFail(lang);
+                    return loginFail();
                 }
             }else{
                 //如果redis没有，就从数据库获取用户详细信息
@@ -142,11 +142,11 @@ public class BackLoginController extends BaseController{
                 //用户名密码错误
                 if(userDetailDTO==null){
                     LOGGER.error("用户名:{} 输入错误的账户名或密码",username);
-                    return loginFail(lang);
+                    return loginFail();
                 }
                 if(userDetailDTO.getIsFreezed().equals(BackUserStatus.FREEZED)){
-                    LOGGER.error("用户名:{} 改用户已被冻结",username);
-                    return freezeFail(lang);
+                    LOGGER.error("用户名:{} 该用户已被冻结",username);
+                    return freezeFail();
                 }
                 //只是将用户名用户密码等详细信息先存入redis
                 redisUtil.set(RedisConfig.LOGIN_USERDETAIL_PREFIX + username, JSON.toJSONString(userDetailDTO),RedisConfig.LOGIN_USERDETAIL_TIMEOUT, TimeUnit.MILLISECONDS);
@@ -165,7 +165,7 @@ public class BackLoginController extends BaseController{
                 LOGGER.info("用户名:{} 登录，对token信息进行更新",username);
                 backUserService.updateToken(uid,token);
             }
-            userDetailDTO.setTokenId("Bearer"+token+"&"+uid);
+            userDetailDTO.setTokenId(TokenUtil.packTokne(token,uid));
             userDetailDTO.setIfFirstLogin(ifFirstLogin);
 
             //将token信息更新到redis,并设置超时时间USER_TOKEN_TIMEOUT
@@ -182,10 +182,10 @@ public class BackLoginController extends BaseController{
                 executorService.execute(new SendSMThread(contact,param,ip));
             }
 
-            return loginSuccess(userDetailDTO,lang);
+            return loginSuccess(userDetailDTO);
         }catch (Exception e){
             LOGGER.error("用户名:{},登录异常详情:{}",username,e.getMessage());
-            return loginError(e,lang);
+            return loginError(e);
         }
     }
 
@@ -205,15 +205,13 @@ public class BackLoginController extends BaseController{
         String username = backUserBO.getUsername();
         String code = backUserBO.getCode();
         LOGGER.info("用户名:{} 进行了短信验证快速登录",username);
-        Integer lang = ValidationUtil.getInteger(request.getHeader("lang"),1);
-        backUserBO.setLang(lang);
         try {
             //先进行用户名和验证码进行校验
-            ValidationUtil.checkBlankAndAssignString(username,lang,RegexConstant.USERNAME_REGEX);
-            ValidationUtil.checkBlankAndAssignString(code,lang,RegexConstant.CODE_REGEX);
+            ValidationUtil.checkBlankAndAssignString(username,RegexConstant.USERNAME_REGEX);
+            ValidationUtil.checkBlankAndAssignString(code,RegexConstant.CODE_REGEX);
         } catch (Exception e) {
             LOGGER.error("用户名:{},登录校验异常:{}",username,e.getMessage());
-            return valiError(e,lang);
+            return valiError(e);
         }
 
         //每次登录生成全新token
@@ -222,13 +220,13 @@ public class BackLoginController extends BaseController{
             BackUser user = backUserService.queryUserByUsername(username);
             if(user==null){
                 LOGGER.warn("快捷登陆，用户名不存在:{}",username);
-                return noUserError(lang);
+                return noUserError();
             }
             //通过用户名获取contact中的手机号
             String phone = user.getContact();
             if(phone.matches(RegexConstant.PHONE_REGEX)){
                 String ip = IPUtil.getIpAddr(request);
-                SMUtil.valiSMCode(code, phone, ip,lang);
+                SMUtil.valiSMCode(code, phone, ip);
 //                //**************************短信验证模块***************************
 //                //认证前后的ip地址要一致，不然会失败
 //                String ip = IPUtil.getIpAddr(request);
@@ -246,7 +244,7 @@ public class BackLoginController extends BaseController{
 //                }
 //                //**************************短信验证模块***************************
             }else{
-                ExceptionUtils.throwException(ErrorMsg.WRONG_CONTACT,lang);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.WRONG_CONTACT));
             }
 
             LOGGER.info("用户:{},从MySQL获取了登录详细信息",username);
@@ -266,16 +264,16 @@ public class BackLoginController extends BaseController{
                 LOGGER.info("用户名:{} 登录，对token信息进行更新",username);
                 backUserService.updateToken(uid,token);
             }
-            userDetailDTO.setTokenId("Bearer"+token+"&"+uid);
+            userDetailDTO.setTokenId(TokenUtil.packTokne(token,uid));
             userDetailDTO.setIfFirstLogin(ifFirstLogin);
 
             //将token信息更新到redis,并设置超时时间USER_TOKEN_TIMEOUT
             redisUtil.set(RedisConfig.USER_TOKEN_PREFIX + uid, token,RedisConfig.USER_TOKEN_TIMEOUT, TimeUnit.MILLISECONDS);
 
-            return loginSuccess(userDetailDTO,lang);
+            return loginSuccess(userDetailDTO);
         }catch (Exception e){
             LOGGER.error("用户名:{},登录异常详情:{}",username,e.getMessage());
-            return loginError(e,lang);
+            return loginError(e);
         }
     }
 
