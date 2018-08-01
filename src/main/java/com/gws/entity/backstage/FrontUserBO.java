@@ -46,4 +46,6 @@ public class FrontUserBO {
 
     private Integer lang;
 
+    private Integer startPage;
+
 }

@@ -29,7 +29,7 @@ import javax.servlet.http.HttpServletRequest;
  * Created by fuzamei on 2018/4/17.
  */
 @RestController
-@RequestMapping("/api/backstage/userCenter")
+@RequestMapping("/back/api/backstage/userCenter")
 public class BackUserCenterController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackUserCenterController.class);

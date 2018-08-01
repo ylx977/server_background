@@ -45,8 +45,8 @@ public enum ErrorMsg {
     CANT_MODIFY_YOUR_ACCOUNT_INFO("不能修改自己的账户信息","you are not allowed to modify your own account info"),
     CANT_MODIFY_SUPERADMIN_ACCOUNT_INFO("不能修改超级管理员的账户信息","you are not allowed to modify super admin account info"),
     CANT_DELETE_YOUR_ACCOUNT("不能删除自己的账号","you are not allowed to delete your account"),
-    CANT_DELETE_SUPERADMIN_ACCOUNT("不能删除超级管理员的账号","you are not allowed to delete super admin account"),
-    TOKEN_FAIL("TOKEN验证失败，请重新失败","token validation failed, please login again"),
+    CANT_DELETE_SUPERADMIN_ACCOUNT("不能删除超级管理员的账号","you are not to delete super admin account"),
+    TOKEN_FAIL("超时未操作，请重新登录","token validation failed, please login again"),
     NULL_AUTH("Authorization为空","you have lost your Authorization in your request header"),
     BLOCK_CHIAN_ERROR("区块链发生错误: ","blockchain occurs error: "),
     SM_ERROR("短信服务出错: ","short message service(SMS) occurs error: "),
@@ -113,6 +113,10 @@ public enum ErrorMsg {
 
     UPDATE_COINFEE_FAIL("更新币提取手续费失败","fail to update coin withdraw fee"),
     UPDATE_GOLDFEE_FAIL("更新黄金提取手续费失败","fail to update gold withdraw fee"),
+
+    DUPLICATE_PHONE("手机号重复","more than one phone numbers were found"),
+    DUPLICATE_EMAIL("邮箱重复","more than one emails were found"),
+    ERROR_BITADDRESS_FORMAT("提币地址格式错误","wrong withdraw address format"),
 
 
 

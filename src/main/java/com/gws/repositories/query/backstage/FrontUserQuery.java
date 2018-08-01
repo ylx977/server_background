@@ -21,6 +21,9 @@ public class FrontUserQuery extends BaseQuery{
     @QBindAttrField(fieldName = "uid",where = Where.equal)
     private Long uid;
 
+    @QBindAttrField(fieldName = "uid",where = Where.notEqual)
+    private Long notUid;
+
     @QBindAttrField(fieldName = "username",where = Where.equal)
     private String username;
 

@@ -21,7 +21,7 @@ import java.util.Map;
  * Created by fuzamei on 2018/6/27.
  */
 @RestController
-@RequestMapping("/api/backstage/feeConfigure")
+@RequestMapping("/back/api/backstage/feeConfigure")
 public class BackFeeConfigureController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackFeeConfigureController.class);

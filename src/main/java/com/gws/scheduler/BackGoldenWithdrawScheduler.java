@@ -73,13 +73,13 @@ public class BackGoldenWithdrawScheduler {
             double fee = goldenWithdraw.getFee();
 
             //支付的usdg费用
-            Integer payUSDG;
+            Long payUSDG;
             if(GoldenUnit.HUNDRED.equals(unit)){
                 //换算成总共需要支付的usdg，100usdg = 1g 黄金
-                payUSDG = withdrawAmount*100*100;
+                payUSDG = 1L*withdrawAmount*100*100;
             }else if(GoldenUnit.THOUSAND.equals(unit)){
                 //换算成总共需要支付的usdg，100usdg = 1g 黄金
-                payUSDG = withdrawAmount*1000*100;
+                payUSDG = 1L*withdrawAmount*1000*100;
             }else{
                 LOGGER.error("定时器获取黄金单位出错");
                 return;
@@ -104,7 +104,7 @@ public class BackGoldenWithdrawScheduler {
     /**
      * 处理后台一直没有处理的黄金单子，将用户冻结的资金返还给可用部分
      */
-    @Scheduled(cron = "0 0 0/1 * * ? ")
+    @Scheduled(cron = "0 0 0/2 * * ? ")
     public void overdueUnhandle(){
         /*
             1.查询除所有超期（当前时间大于withdraw_time）的申请单，状态是【申请中】
@@ -132,13 +132,13 @@ public class BackGoldenWithdrawScheduler {
             double fee = goldenWithdraw.getFee();
 
             //支付的usdg费用
-            Integer payUSDG;
+            Long payUSDG;
             if(GoldenUnit.HUNDRED.equals(unit)){
                 //换算成总共需要支付的usdg，100usdg = 1g 黄金
-                payUSDG = withdrawAmount*100*100;
+                payUSDG = 1L*withdrawAmount*100*100;
             }else if(GoldenUnit.THOUSAND.equals(unit)){
                 //换算成总共需要支付的usdg，100usdg = 1g 黄金
-                payUSDG = withdrawAmount*1000*100;
+                payUSDG = 1L*withdrawAmount*1000*100;
             }else{
                 LOGGER.error("定时器获取黄金单位出错");
                 return;
@@ -150,12 +150,13 @@ public class BackGoldenWithdrawScheduler {
                 goldenWithdrawBO.setId(id);
                 goldenWithdrawBO.setUid(uid);
                 goldenWithdrawBO.setTotalUSDG(totalUSDG);
+                goldenWithdrawBO.setPayUSDG(payUSDG);
                 backGoldenWithdrawService.dealWithOverduesUnhandled(goldenWithdrawBO);
             } catch (Exception e) {
                 LOGGER.error("定时器处理单个单据信息"+"(id="+id+",uid="+uid+")"+"出错:"+e.getMessage());
             }
         }
-        System.out.println("老子我1小时执行一次，哈哈");
+        System.out.println("老子我2小时执行一次，哈哈");
 
     }
 

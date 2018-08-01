@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Created by fuzamei on 2018/6/21.
  */
 @RestController
-@RequestMapping(("/api/backstage/problem"))
+@RequestMapping(("/back/api/backstage/problem"))
 public class CommonProblemController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CommonProblemController.class);

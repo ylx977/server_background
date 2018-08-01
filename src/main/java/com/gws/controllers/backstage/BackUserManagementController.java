@@ -35,7 +35,7 @@ import java.util.List;
  * Created by fuzamei on 2018/4/16.
  */
 @RestController
-@RequestMapping("/api/backstage/userManagement")
+@RequestMapping("/back/api/backstage/userManagement")
 public class BackUserManagementController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackUserManagementController.class);

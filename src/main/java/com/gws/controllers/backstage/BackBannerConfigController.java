@@ -31,7 +31,7 @@ import java.util.concurrent.ExecutorService;
  * Created by fuzamei on 2018/4/24.
  */
 @RestController
-@RequestMapping("/api/backstage/bannerConfig")
+@RequestMapping("/back/api/backstage/bannerConfig")
 @PropertySource(value = {"classpath:application.properties"},encoding = "utf-8")
 public class BackBannerConfigController extends BaseController{
 

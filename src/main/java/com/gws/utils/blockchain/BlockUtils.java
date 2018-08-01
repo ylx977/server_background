@@ -1,6 +1,7 @@
 package com.gws.utils.blockchain;
 
 import com.alibaba.fastjson.JSON;
+import com.gws.common.constants.backstage.SymbolId;
 import com.gws.utils.HexStringUtil;
 import com.gws.utils.ReadConfUtil;
 import com.gws.utils.http.ConfReadUtil;
@@ -27,6 +28,17 @@ public class BlockUtils {
         System.out.println(jsonstr);
         String jsonResult = HttpRequest.sendPost(url, jsonstr);
         return jsonResult;
+    }
+
+    public static void main(String[] args) {
+        ProtobufBean protobufBean = Protobuf4EdsaUtils.requestTransfer("017615faee7ade72ecc9838f06e954ab4581802c7be22668c90508c8a9bee1e5",
+                SymbolId.BTY, "9c885ce7664ed3c3675df8e49590c141665d94add5bf72a816a8d8a78bd8fbe5",
+                "297b9985d533c14a801b016d2065dbe21c70b1c5e396e52ec886b41e94b14fa5", 1000000000000L);
+        String s = sendPostParam(protobufBean);
+        System.out.println(s);
+        if(!vilaResult(s)){
+            throw new RuntimeException(getErrorMessage(s));
+        }
     }
 
     /**

@@ -45,7 +45,7 @@ public class BtyUsdgTradeOrderQuery extends BaseQuery{
     @QBindAttrField(fieldName = "ctime",where = Where.lessThanOrEqualTo)
     private Integer cendTime;
 
-    @Column(name = "trade_type")
+    @QBindAttrField(fieldName = "tradeType",where = Where.equal)
     private Integer tradeType;
 
 }

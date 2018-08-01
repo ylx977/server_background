@@ -41,7 +41,7 @@ import java.util.Arrays;
  * Created by fuzamei on 2018/5/11.
  */
 @RestController
-@RequestMapping("/api/backstageSM")
+@RequestMapping("/back/api/backstageSM")
 @PropertySource(value = {"classpath:application.properties"},encoding="utf-8")
 public class BackSMcontroller extends BaseController{
 

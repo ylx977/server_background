@@ -252,7 +252,7 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
 
     @Override
     public List<GoldenWithdraw> queryAllOverdues() {
-        Integer currentTime = (int)(System.currentTimeMillis()/1000);
+        Integer currentTime = (int)(System.currentTimeMillis()/1000 - 24*3600);
         BackGoldenWithdarwQuery backGoldenWithdarwQuery = new BackGoldenWithdarwQuery();
         backGoldenWithdarwQuery.setOverWithdrawTime(currentTime);
         backGoldenWithdarwQuery.setStatus(GoldenWithDrawEnum.TO_WITHDRAW.getStatus());
@@ -270,13 +270,15 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
         Long id = goldenWithdrawBO.getId();
         Long uid = goldenWithdrawBO.getUid();
         Double chargeUSDG = goldenWithdrawBO.getChargeUSDG();
-        Integer payUSDG = goldenWithdrawBO.getPayUSDG();
+        Long payUSDG = goldenWithdrawBO.getPayUSDG();
         //一半的手续费
         Double halfCharge = DecimalUtil.divide(chargeUSDG, 2, 8, RoundingMode.HALF_EVEN);
         //返还给可用资金部分
         Double backToUsable = DecimalUtil.add(payUSDG,halfCharge,8,RoundingMode.HALF_EVEN);
         //冻结金额部分扣除
         Double minusFreeze = DecimalUtil.add(payUSDG,chargeUSDG,8,RoundingMode.HALF_EVEN);
+        //对应要提取的黄金量
+        Double gold = DecimalUtil.divide(payUSDG, 100d, 8, RoundingMode.HALF_EVEN);
 
         //用户的账户变动
         Query nativeQuery = em.createNativeQuery("UPDATE usdg_user_account SET real_amount = real_amount-?,usable_amount = usable_amount + ?,freeze_amount = freeze_amount - ? WHERE uid=? AND type=?");
@@ -312,6 +314,15 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
             throw new RuntimeException("更新黄金单号状态失败");
         }
 
+        //王斌在黄金提取申请的时候直接将黄金库存中黄金的量先扣除，因此如果失败要将黄金数量返还给平台黄金库存表platform_gold
+        Query nativeQuery4 = em.createNativeQuery("UPDATE platform_gold SET total_gold = total_gold + ? WHERE id=1");
+        nativeQuery4.setParameter(1,gold);
+        int success4 = nativeQuery4.executeUpdate();
+        if(success4 == 0){
+            LOGGER.error("更新平台黄金库存表失败");
+            throw new RuntimeException("更新平台黄金库存表失败");
+        }
+
         //用户合约里的公私钥信息
         UserContract userContract = userContractSlave.findOne(uid);
 
@@ -327,7 +338,7 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
 
     @Override
     public List<GoldenWithdraw> queryAllOverduesUnhandled() {
-        Integer currentTime = (int)(System.currentTimeMillis()/1000);
+        Integer currentTime = (int)(System.currentTimeMillis()/1000 - 24*3600);
         BackGoldenWithdarwQuery backGoldenWithdarwQuery = new BackGoldenWithdarwQuery();
         backGoldenWithdarwQuery.setOverWithdrawTime(currentTime);
         backGoldenWithdarwQuery.setStatus(GoldenWithDrawEnum.APPLY.getStatus());
@@ -345,6 +356,9 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
         Long id = goldenWithdrawBO.getId();
         Long uid = goldenWithdrawBO.getUid();
         Double totalUSDG = goldenWithdrawBO.getTotalUSDG();
+        //根据支付的usdg换算成黄金
+        Long payUSDG = goldenWithdrawBO.getPayUSDG();
+        Double gold = DecimalUtil.divide(payUSDG, 100d, 8, RoundingMode.HALF_EVEN);
 
         //用户的账户变动
         Query nativeQuery = em.createNativeQuery("UPDATE usdg_user_account SET usable_amount = usable_amount + ?,freeze_amount = freeze_amount - ? WHERE uid=? AND type=?");
@@ -368,5 +382,14 @@ public class BackGoldenWithdrawServiceImpl implements BackGoldenWithdrawService 
             throw new RuntimeException("更新黄金单号状态失败");
         }
 
+
+        //王斌在黄金提取申请的时候直接将黄金库存中黄金的量先扣除，因此如果失败要将黄金数量返还给平台黄金库存表platform_gold
+        Query nativeQuery3 = em.createNativeQuery("UPDATE platform_gold SET total_gold = total_gold + ? WHERE id=1");
+        nativeQuery3.setParameter(1,gold);
+        int success4 = nativeQuery3.executeUpdate();
+        if(success4 == 0){
+            LOGGER.error("更新平台黄金库存表失败");
+            throw new RuntimeException("更新平台黄金库存表失败");
+        }
     }
 }

@@ -203,12 +203,12 @@ public class FrontUserServiceImpl implements FrontUserService {
         //确保不是去修改已经被删除的用户信息
         frontUserQuery.setUserStatus(FrontUserStatus.NORMAL);
 
-        /*//如果是修改手机
+        //如果是修改手机
         if(FrontUserApplyEnum.PHONE.getCode().equals(changeType)){
             FrontUser frontUser = new FrontUser();
             frontUser.setPhoneNumber(one.getNewInfo());
             success = frontUserMaster.update(frontUser, frontUserQuery,"phoneNumber");
-        }*/
+        }
 
         //如果是修改邮箱
         if(FrontUserApplyEnum.EMAIL.getCode().equals(changeType)){
@@ -267,18 +267,42 @@ public class FrontUserServiceImpl implements FrontUserService {
         FrontUser frontUser = new FrontUser();
         int flag = 0;
         List<String> properties = new ArrayList<>();
-//        if(!StringUtils.isEmpty(phoneNumber)){
-//            ValidationUtil.checkBlankString(phoneNumber, RegexConstant.PHONE_REGEX);
-//            frontUser.setPhoneNumber(phoneNumber);
-//            properties.add("phoneNumber");
-//            flag++;
-//        }
+        if(!StringUtils.isEmpty(phoneNumber)){
+            ValidationUtil.checkBlankString(phoneNumber, RegexConstant.PHONE_REGEX);
+            frontUser.setPhoneNumber(phoneNumber);
+            properties.add("phoneNumber");
+
+            //检查手机号是否重复
+            FrontUserQuery query = new FrontUserQuery();
+            query.setPhoneNumber(phoneNumber);
+            query.setNotUid(uid);
+            if(frontUserMaster.findAll(query).size() > 0){
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.DUPLICATE_PHONE));
+            }
+
+            flag++;
+        }else{
+            frontUser.setPhoneNumber(null);
+            properties.add("phoneNumber");
+        }
 
         if(!StringUtils.isEmpty(email)){
             ValidationUtil.checkBlankString(email, RegexConstant.EMAIL_REGEX);
             frontUser.setEmailAddress(email);
             properties.add("emailAddress");
+
+            //检查邮箱是否重复
+            FrontUserQuery query = new FrontUserQuery();
+            query.setEmailAddress(email);
+            query.setNotUid(uid);
+            if(frontUserMaster.findAll(query).size() > 0){
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.DUPLICATE_EMAIL));
+            }
+
             flag++;
+        }else{
+            frontUser.setEmailAddress(null);
+            properties.add("emailAddress");
         }
 
         if(flag == 0){

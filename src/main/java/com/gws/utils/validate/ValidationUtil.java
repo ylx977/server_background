@@ -1317,7 +1317,7 @@ public class ValidationUtil {
 				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NULL_POINT));
 			}
 			if(e instanceof ClassCastException){
-				throw new RuntimeException(LangReadUtil.getProperty("CAST_STRING_EXCEPTION"));
+				throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CAST_STRING_EXCEPTION));
 			}
 			throw new RuntimeException(e.getMessage());
 		}

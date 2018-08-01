@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * Created by fuzamei on 2018/4/18.
  */
 @RestController
-@RequestMapping("/api/backstage")
+@RequestMapping("/back/api/backstage")
 public class BackLoginController extends BaseController{
 
     @Autowired

@@ -58,6 +58,7 @@ public class Protobuf4EdsaUtils {
 
         //最终的请求数据
         Msg.WriteRequest finalRequest = writeRequest.build();
+        System.out.println(finalRequest);
         byte[] finalBytes = finalRequest.toByteArray();
         String sign = Base64.getEncoder().encodeToString(finalBytes);
         return new ProtobufBean(instructionId,sign);
@@ -91,26 +92,29 @@ public class Protobuf4EdsaUtils {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception{
 
-        String privateKey = KeyUtils.getPrivateKey1(KeyUtils.getRandom());
-        String publicKey = KeyUtils.getPublicKey(privateKey);
-        System.out.println(privateKey);
-        System.out.println(publicKey);
-        String userprikey = "a1de1af521a6701260112f0b0487f7034a5abe23719825a628549cca11c6c0ef";
+//        String privateKey = KeyUtils.getPrivateKey1(KeyUtils.getRandom());
+//        String publicKey = KeyUtils.getPublicKey(privateKey);
+//        System.out.println(privateKey);
+//        System.out.println(publicKey);
+        /*String userprikey = "a1de1af521a6701260112f0b0487f7034a5abe23719825a628549cca11c6c0ef";
         System.out.println(userprikey);
         String userpubkey = "2f05b971096c569ff361c5ea277fe79b44c2e86a5d6f8a13d32e90b5a58bc786";
         System.out.println(userpubkey);
         String bankpubkey = "9c885ce7664ed3c3675df8e49590c141665d94add5bf72a816a8d8a78bd8fbe5";
         String bankprikey = "017615faee7ade72ecc9838f06e954ab4581802c7be22668c90508c8a9bee1e5";
 //        ProtobufBean protobufBean = requestTransfer(userprikey, SymbolId.USDG, userpubkey, bankpubkey, 0L);
-        ProtobufBean protobufBean = requestTransfer(bankprikey, SymbolId.USDG, bankpubkey, userpubkey, 100000000L);
-        String jsonResult = BlockUtils.sendPostParam(protobufBean);
+        ProtobufBean protobufBean = requestTransfer(bankprikey, SymbolId.USDG, bankpubkey, userpubkey, 100000000L);*/
+
+//        String jsonResult = BlockUtils.sendPostParam(protobufBean);
 //        System.out.println(jsonResult);
 //        boolean flag = BlockUtils.vilaResult(jsonResult);
 //        if(!flag){
 //            System.out.println(BlockUtils.getErrorMessage(jsonResult));
 //        }
+        ByteString bytes = ByteString.copyFrom(HexUtil.hexString2Bytes("0a4f0a0ae69da8e5878ce99c8432120568617368331a0731323334353536220a796c78e59088e5908c322a037331322a0373323232037031323203703232400148015206c3a6c297c2a058f0beb5d0cc2c"));
+        System.out.println(bytes.toStringUtf8());
     }
 
 }

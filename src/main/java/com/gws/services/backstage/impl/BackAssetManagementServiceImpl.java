@@ -5,26 +5,23 @@ import com.gws.common.constants.backstage.*;
 import com.gws.configuration.backstage.UserInfoConfig;
 import com.gws.controllers.backSM.SMUtil;
 import com.gws.dto.backstage.PageDTO;
-import com.gws.dto.backstage.UserDetailDTO;
 import com.gws.entity.backstage.*;
-import com.gws.entity.backstage.createRawTransaction.CreateTXUtils;
-import com.gws.entity.backstage.createRawTransaction.RawTXResp;
-import com.gws.entity.backstage.createRawTransaction.SendTXResp;
 import com.gws.entity.backstage.price.PriceResult;
 import com.gws.entity.backstage.wallet_lbz.USDGTXUtis;
+import com.gws.mapper.BackAssetManagementMapper;
+import com.gws.mapper.FrontUserRechargeMapper;
 import com.gws.repositories.master.backstage.*;
 import com.gws.repositories.query.backstage.*;
 import com.gws.repositories.slave.backstage.*;
 import com.gws.services.backstage.BackAssetManagementService;
 import com.gws.utils.IPUtil;
-import com.gws.utils.ReadConfUtil;
 import com.gws.utils.blockchain.*;
 import com.gws.utils.cache.IdGlobalGenerator;
 import com.gws.utils.decimal.DecimalUtil;
-import com.gws.utils.http.ConfReadUtil;
 import com.gws.utils.http.HttpRequest;
 import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.transfer.TransferCoin;
+import com.gws.utils.wallet.BitcoinAddressValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,6 +90,10 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
 
     private final UsdgGoldTopupMaster usdgGoldTopupMaster;
 
+    private final BackAssetManagementMapper backAssetManagementMapper;
+
+    private final FrontUserRechargeMapper frontUserRechargeMapper;
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -157,7 +158,28 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     private String walleturl;
 
     @Autowired
-    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave, FrontUserAccountSlave frontUserAccountSlave, FrontUserAccountMaster frontUserAccountMaster, UserIdentitySlave userIdentitySlave, FrontUserRechargeSlave frontUserRechargeSlave, PlatformUsdgSlave platformUsdgSlave, PlatformUsdgMaster platformUsdgMaster, UsdgOfficialAccountMaster usdgOfficialAccountMaster, UsdgOfficialAccountSlave usdgOfficialAccountSlave, FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster, FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave, BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave, PlatformGoldSlave platformGoldSlave, PlatformGoldMaster platformGoldMaster, BtyAddressesSlave btyAddressesSlave, BtyAddressesMaster btyAddressesMaster, IdGlobalGenerator idGlobalGenerator, BackUserSlave backUserSlave, UserContractSlave userContractSlave, UsdgGoldTopupMaster usdgGoldTopupMaster) {
+    public BackAssetManagementServiceImpl(FrontUserSlave frontUserSlave,
+                                          FrontUserAccountSlave frontUserAccountSlave,
+                                          FrontUserAccountMaster frontUserAccountMaster,
+                                          UserIdentitySlave userIdentitySlave,
+                                          FrontUserRechargeSlave frontUserRechargeSlave,
+                                          PlatformUsdgSlave platformUsdgSlave,
+                                          PlatformUsdgMaster platformUsdgMaster,
+                                          UsdgOfficialAccountMaster usdgOfficialAccountMaster,
+                                          UsdgOfficialAccountSlave usdgOfficialAccountSlave,
+                                          FrontUserCoinWithdrawMaster frontUserCoinWithdrawMaster,
+                                          FrontUserCoinWithdrawSlave frontUserCoinWithdrawSlave,
+                                          BtyUsdgTradeOrderSlave btyUsdgTradeOrderSlave,
+                                          PlatformGoldSlave platformGoldSlave,
+                                          PlatformGoldMaster platformGoldMaster,
+                                          BtyAddressesSlave btyAddressesSlave,
+                                          BtyAddressesMaster btyAddressesMaster,
+                                          IdGlobalGenerator idGlobalGenerator,
+                                          BackUserSlave backUserSlave,
+                                          UserContractSlave userContractSlave,
+                                          UsdgGoldTopupMaster usdgGoldTopupMaster,
+                                          BackAssetManagementMapper backAssetManagementMapper,
+                                          FrontUserRechargeMapper frontUserRechargeMapper) {
         this.frontUserSlave = frontUserSlave;
         this.frontUserAccountSlave = frontUserAccountSlave;
         this.frontUserAccountMaster = frontUserAccountMaster;
@@ -178,6 +200,8 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         this.backUserSlave = backUserSlave;
         this.userContractSlave = userContractSlave;
         this.usdgGoldTopupMaster = usdgGoldTopupMaster;
+        this.backAssetManagementMapper = backAssetManagementMapper;
+        this.frontUserRechargeMapper = frontUserRechargeMapper;
     }
 
     @Override
@@ -299,29 +323,9 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     public PageDTO queryFrontUserRecharge(FrontUserBO frontUserBO) {
         Integer page = frontUserBO.getPage();
         Integer rowNum = frontUserBO.getRowNum();
-        Integer coinType = frontUserBO.getCoinType();
-        Integer startTime = frontUserBO.getStartTime();
-        Integer endTime = frontUserBO.getEndTime();
-        Long uid = frontUserBO.getUid();
-
-        FrontUserRechargeQuery frontUserRechargeQuery = new FrontUserRechargeQuery();
-        if(coinType != null){
-            frontUserRechargeQuery.setCoinType(coinType);
-        }
-        if(uid != null){
-            frontUserRechargeQuery.setUid(uid);
-        }
-        frontUserRechargeQuery.setCstartTime(startTime);
-        frontUserRechargeQuery.setCendTime(endTime);
-
-        //按照创建时间倒序排列
-        Sort sort = new Sort(Sort.Direction.DESC,"ctime");
-        Pageable pageable = new PageRequest(page - 1,rowNum,sort);
-        Page<FrontUserRecharge> frontUserRechargePage = frontUserRechargeSlave.findAll(frontUserRechargeQuery, pageable);
-
-        List<FrontUserRecharge> list = frontUserRechargePage == null ? Collections.emptyList() : frontUserRechargePage.getContent();
-        long totalPage = frontUserRechargePage == null ? 0 : frontUserRechargePage.getTotalElements();
-
+        frontUserBO.setStartPage((page - 1) * rowNum);
+        List<FrontUserRecharge> list = frontUserRechargeMapper.queryFrontUserRecharge(frontUserBO);
+        long totalPage = frontUserRechargeMapper.queryFrontUserRechargeCount(frontUserBO);
         return PageDTO.getPagination(totalPage,list);
     }
 
@@ -362,7 +366,7 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
             platformGoldMaster.save(newPlatformGold);
 
             //平台官方账户里面初次加入BTY/USDG数据
-            String address = USDGTXUtis.createAddress("1");
+            String address = USDGTXUtis.createAddress(PlatformUid.STRINGUID);
             for (int i=1;i<=2;i++){
                 UsdgOfficialAccount usdgOfficialAccount = new UsdgOfficialAccount();
                 usdgOfficialAccount.setId((long)i);
@@ -511,7 +515,7 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void firstPass(FrontUserBO frontUserBO) {
-        Integer currentTime = (int)System.currentTimeMillis()/1000;
+        Integer currentTime = (int)(System.currentTimeMillis()/1000);
         Long id = frontUserBO.getId();
         FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
         if(one==null){
@@ -549,7 +553,7 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
             注意：不改变用户账户的冻结资产，等王斌根据这个hash查询到用户的交易信息后再去数据库改，同时平台的账户还要增加旷工费
          */
 
-        Integer currentTime = (int) System.currentTimeMillis()/1000;
+        Integer currentTime = (int) (System.currentTimeMillis()/1000);
         Long id = frontUserBO.getId();
         //获取该申请单详细信息
         FrontUserWithdrawApply one = frontUserCoinWithdrawSlave.findOne(id);
@@ -569,6 +573,10 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         double coinAmount = DecimalUtil.subtract(totalAmount,minerAmount,8,RoundingMode.HALF_EVEN);
         //要打币去的地址
         String toAddress = one.getOuterAddress();
+
+        if(!BitcoinAddressValidator.validateBitcoinAddress(toAddress)){
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.ERROR_BITADDRESS_FORMAT));
+        }
 
         //币种类型1:usdg 2:bty
         Integer coinType = one.getCoinType();
@@ -699,42 +707,9 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
     public PageDTO queryExchange(FrontUserBO frontUserBO) {
         Integer page = frontUserBO.getPage();
         Integer rowNum = frontUserBO.getRowNum();
-        Integer startTime = frontUserBO.getStartTime();
-        Integer endTime = frontUserBO.getEndTime();
-
-
-        BtyUsdgTradeOrderQuery btyUsdgTradeOrderQuery = new BtyUsdgTradeOrderQuery();
-
-        if(frontUserBO.getUid()!=null){
-            btyUsdgTradeOrderQuery.setUid(frontUserBO.getUid());
-        }
-
-        if(frontUserBO.getTradeType()!=null){
-            btyUsdgTradeOrderQuery.setTradeType(frontUserBO.getTradeType());
-        }
-
-        if(frontUserBO.getPersonName()!=null){
-            btyUsdgTradeOrderQuery.setPersonNameLike(frontUserBO.getPersonName());
-        }
-
-        if(frontUserBO.getPhoneNumber()!=null){
-            btyUsdgTradeOrderQuery.setPhoneNumberLike(frontUserBO.getPhoneNumber());
-        }
-
-        if(frontUserBO.getEmail()!=null){
-            btyUsdgTradeOrderQuery.setEmailLike(frontUserBO.getEmail());
-        }
-        btyUsdgTradeOrderQuery.setCstartTime(startTime);
-        btyUsdgTradeOrderQuery.setCendTime(endTime);
-
-        //按照创建时间倒序排列
-        Sort sort = new Sort(Sort.Direction.DESC,"ctime");
-        Pageable pageable = new PageRequest(page - 1,rowNum,sort);
-        Page<BtyUsdgTradeOrder> btyUsdgTradeOrderPage = btyUsdgTradeOrderSlave.findAll(btyUsdgTradeOrderQuery, pageable);
-
-        List<BtyUsdgTradeOrder> list = btyUsdgTradeOrderPage == null ? Collections.emptyList() : btyUsdgTradeOrderPage.getContent();
-        long totalPage = btyUsdgTradeOrderPage == null ? 0 : btyUsdgTradeOrderPage.getTotalElements();
-
+        frontUserBO.setStartPage((page-1)*rowNum);
+        List<BtyUsdgTradeOrder> list = backAssetManagementMapper.queryExchange(frontUserBO);
+        long totalPage = backAssetManagementMapper.queryExchangeCount(frontUserBO);
         return PageDTO.getPagination(totalPage,list);
     }
 
@@ -826,7 +801,7 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
 
         //---->todo 获取平台超级管理员的详细信息(steven的个人账户信息)
         BackUser one = backUserSlave.findOne(1L);
-        String phone = one.getContact();
+        String phone = UserInfoConfig.getUserInfo().getContact();
         //*********************短信验证码的验证**********************
         String ip = IPUtil.getIpAddr(request);
         boolean flag = SMUtil.valiSMCode(code, phone, ip);
@@ -864,6 +839,7 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
             hash = USDGTXUtis.withdrawCoin(toAddress, amount * 100000000, tokenSymbol);
         }catch (Exception e){
             //调滨江接口出现问题，需要调黄学忠接口将币从银行反打回用户去
+            LOGGER.error("调滨江接口出现问题，需要调黄学忠接口将币从银行反打回用户去");
             ProtobufBean protobufBean2 = Protobuf4EdsaUtils.requestTransfer(bankPrikey, symbolId, bankPubkey, platformBtyPubkey, (long)(amount*100000000));
             String jsonResult2 = BlockUtils.sendPostParam(protobufBean2);
             boolean flag3 = BlockUtils.vilaResult(jsonResult2);
@@ -878,8 +854,9 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         //对第三个请求返回的结果的hash值要存入交易信息中
         FrontUserWithdrawApply frontUserWithdrawApply = new FrontUserWithdrawApply();
         frontUserWithdrawApply.setId(idGlobalGenerator.getSeqId(FrontUserWithdrawApply.class));
-        frontUserWithdrawApply.setUid(1L);//默认平台账户的前台账户uid号为1
+        frontUserWithdrawApply.setUid(PlatformUid.LONGUID);//默认平台账户的前台账户uid号为1
         frontUserWithdrawApply.setCoinAmount(amount);
+        frontUserWithdrawApply.setInnerAddress(null);
         frontUserWithdrawApply.setMinerAmount(0d);
         frontUserWithdrawApply.setPhoneNumber(phone);
         frontUserWithdrawApply.setPersonName(one.getPersonName());
@@ -894,7 +871,6 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         frontUserWithdrawApply.setHash(hash);//-------把李邦柱返回的hash存入
         frontUserCoinWithdrawMaster.save(frontUserWithdrawApply);
     }
-
 
 
 }

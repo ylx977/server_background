@@ -1,6 +1,7 @@
 package com.gws.controllers.backstage;
 
 import com.gws.common.constants.backstage.BannerDisplayOrder;
+import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.configuration.backstage.UidConfig;
 import com.gws.controllers.BaseApiController;
 import com.gws.controllers.BaseController;
@@ -13,7 +14,9 @@ import com.gws.entity.backstage.BtyAddresses;
 import com.gws.entity.backstage.FrontUserBO;
 import com.gws.enums.SystemCode;
 import com.gws.services.backstage.BackAssetManagementService;
+import com.gws.utils.http.LangReadUtil;
 import com.gws.utils.validate.ValidationUtil;
+import com.gws.utils.wallet.BitcoinAddressValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +33,7 @@ import java.util.List;
  * Created by fuzamei on 2018/4/17.
  */
 @RestController
-@RequestMapping("/api/backstage/assetManagement")
+@RequestMapping("/back/api/backstage/assetManagement")
 public class BackAssetManagementController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackAssetManagementController.class);
@@ -426,7 +429,10 @@ public class BackAssetManagementController extends BaseController{
         Long uid = UidConfig.getUid();
         LOGGER.info("用户:{},添加平台管理的地址",uid);
         try {
-            ValidationUtil.checkBlankAndAssignString(assetBO.getAddress());
+            String address = ValidationUtil.checkBlankAndAssignString(assetBO.getAddress());
+            if(!BitcoinAddressValidator.validateBitcoinAddress(address)){
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.ERROR_BITADDRESS_FORMAT));
+            }
             ValidationUtil.checkBlankAndAssignString(assetBO.getTag());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
@@ -484,7 +490,10 @@ public class BackAssetManagementController extends BaseController{
         Long uid = UidConfig.getUid();
         LOGGER.warn("用户:{},进行提币操作",uid);
         try {
-            ValidationUtil.checkBlankAndAssignString(assetBO.getToAddress());
+            String address = ValidationUtil.checkBlankAndAssignString(assetBO.getToAddress());
+            if(!BitcoinAddressValidator.validateBitcoinAddress(address)){
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.ERROR_BITADDRESS_FORMAT));
+            }
             ValidationUtil.checkBlankAndAssignString(assetBO.getCode());
             ValidationUtil.checkRangeAndAssignDouble(assetBO.getAmount(),0d,Double.MAX_VALUE);
             ValidationUtil.checkRangeAndAssignInt(assetBO.getCoinType(),1,2);

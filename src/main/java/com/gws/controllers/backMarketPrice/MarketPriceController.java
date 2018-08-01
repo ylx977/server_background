@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletRequest;
  * Created by fuzamei on 2018/5/30.
  */
 @RestController
-@RequestMapping("/api/backmarketprice")
+@RequestMapping("/back/api/backmarketprice")
 public class MarketPriceController extends BaseController{
 
     private final HttpServletRequest request;

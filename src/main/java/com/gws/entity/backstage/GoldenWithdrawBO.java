@@ -45,7 +45,7 @@ public class GoldenWithdrawBO {
 
     private Integer lang;
 
-    private Integer payUSDG;
+    private Long payUSDG;
 
     private Double totalUSDG;
 

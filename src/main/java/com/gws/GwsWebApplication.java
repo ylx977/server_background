@@ -1,6 +1,7 @@
 package com.gws;
 
 import com.gws.utils.GwsLogger;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
@@ -16,6 +17,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 	 			"classpath:conf/shardingConfig.xml"
 				})
 @EnableAsync
+@MapperScan(basePackages = {"com.gws.mapper"})
 public class GwsWebApplication {
     public static void main(String[] args) {
     	SpringApplication app = new SpringApplication(GwsWebApplication.class);

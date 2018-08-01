@@ -35,23 +35,23 @@ public class InterceptorConfig extends WebMvcConfigurationSupport {
     @Override
     protected void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(langInterceptor)
-                .addPathPatterns("/api/**");
+                .addPathPatterns("/back/api/**");
         registry.addInterceptor(tokenInterceptor)
-                .addPathPatterns("/api/backstage/**")
-                .excludePathPatterns("/api/backstage/login")
-                .excludePathPatterns("/api/backstage/fastLogin");
+                .addPathPatterns("/back/api/backstage/**")
+                .excludePathPatterns("/back/api/backstage/login")
+                .excludePathPatterns("/back/api/backstage/fastLogin");
         registry.addInterceptor(authorityInterceptor)
-                .addPathPatterns("/api/backstage/**")
-                .excludePathPatterns("/api/backstage/login")
-                .excludePathPatterns("/api/backstage/fastLogin");
+                .addPathPatterns("/back/api/backstage/**")
+                .excludePathPatterns("/back/api/backstage/login")
+                .excludePathPatterns("/back/api/backstage/fastLogin");
         registry.addInterceptor(timeoutInterceptor)
-                .addPathPatterns("/api/backstage/**")
-                .excludePathPatterns("/api/backstage/login")
-                .excludePathPatterns("/api/backstage/fastLogin");
+                .addPathPatterns("/back/api/backstage/**")
+                .excludePathPatterns("/back/api/backstage/login")
+                .excludePathPatterns("/back/api/backstage/fastLogin");
         registry.addInterceptor(freezeInterceptor)
-                .addPathPatterns("/api/backstage/**")
-                .excludePathPatterns("/api/backstage/login")
-                .excludePathPatterns("/api/backstage/fastLogin");
+                .addPathPatterns("/back/api/backstage/**")
+                .excludePathPatterns("/back/api/backstage/login")
+                .excludePathPatterns("/back/api/backstage/fastLogin");
 
     }
 

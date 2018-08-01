@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletRequest;
  * Created by fuzamei on 2018/5/8.
  */
 @RestController
-@RequestMapping("/api/backstage/feedback")
+@RequestMapping("/back/api/backstage/feedback")
 public class BackFeedbackController extends BaseController{
 
     private final HttpServletRequest request;

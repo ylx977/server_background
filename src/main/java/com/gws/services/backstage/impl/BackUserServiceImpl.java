@@ -40,6 +40,7 @@ import org.springframework.util.StringUtils;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -196,6 +197,11 @@ public class BackUserServiceImpl implements BackUserService {
             //如果redis获取信息为空，去数据库获取
             LOGGER.info("用户:{},去数据库获取用户权限信息，并存入redis",uid);
             UserDetailDTO userDetailDTO = getUserAuthority(uid,authUrl);
+            List<String> authUrls = userDetailDTO.getAuthUrl();
+            if(!authUrls.contains(authUrl)){
+                LOGGER.error("权限无法比配上:"+authUrl);
+                throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NO_AUTH));
+            }
             redisTemplate.opsForValue().set(RedisConfig.USER_AUTH_PREFIX + uid, JSON.toJSONString(userDetailDTO));
             return userDetailDTO;
         }else{
@@ -203,6 +209,7 @@ public class BackUserServiceImpl implements BackUserService {
             UserDetailDTO userDetailDTO = JSON.parseObject(redisAuthority, UserDetailDTO.class);
             List<String> authUrls = userDetailDTO.getAuthUrl();
             if(!authUrls.contains(authUrl)){
+                LOGGER.error("权限无法比配上:"+authUrl);
                 throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.NO_AUTH));
             }
             return userDetailDTO;
@@ -329,9 +336,9 @@ public class BackUserServiceImpl implements BackUserService {
         if(!operatorUid.equals(1L)){
             //如果是超级管理员除了自己的信息不能看到其他人都能看到
             Query query = em.createNativeQuery("select uid from back_users_authgroups where authgroup_id in (1,2)");
-            List<Long> resultList = (List<Long>) query.getResultList();
-            for(Long uid : resultList){
-                if(uids.contains(uid)){
+            List<BigInteger> resultList = query.getResultList();
+            for(BigInteger uid : resultList){
+                if(uids.contains(uid.longValue())){
                     throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.CANT_DELETE_ADMIN_ACCOUNT));
                 }
             }

@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author ylx
  * Created by fuzamei on 2018/6/8.
  */
-@RequestMapping("/api/transfer")
+@RequestMapping("/back/api/transfer")
 @RestController
 @PropertySource(value = {"classpath:application.properties"},encoding="utf-8")
 public class UsdgTransferController extends BaseController{

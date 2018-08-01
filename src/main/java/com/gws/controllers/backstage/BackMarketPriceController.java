@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletRequest;
  * Created by fuzamei on 2018/4/17.
  */
 @RestController
-@RequestMapping("/api/backstage/marketPrice")
+@RequestMapping("/back/api/backstage/marketPrice")
 public class BackMarketPriceController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackMarketPriceController.class);
@@ -77,8 +77,6 @@ public class BackMarketPriceController extends BaseController{
             }
             ValidationUtil.checkAndAssignDouble(marketPriceBO.getSellSpread());
             ValidationUtil.checkAndAssignDouble(marketPriceBO.getBuySpread());
-            ValidationUtil.checkAndAssignDouble(marketPriceBO.getBuyBtyUsdg());
-            ValidationUtil.checkAndAssignDouble(marketPriceBO.getSellBtyUsdg());
         }catch (Exception e){
             LOGGER.error("用户:{},详情:{}-->参数校验失败",uid,e.getMessage());
             return valiError(e);

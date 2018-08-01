@@ -29,7 +29,7 @@ import java.util.List;
  * Created by fuzamei on 2018/4/17.
  */
 @RestController
-@RequestMapping("/api/backstage/goldenWithdraw")
+@RequestMapping("/back/api/backstage/goldenWithdraw")
 public class BackGoldenWithdrawController extends BaseController{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackGoldenWithdrawController.class);

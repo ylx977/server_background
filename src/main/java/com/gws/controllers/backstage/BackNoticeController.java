@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
  * Created by fuzamei on 2018/5/8.
  */
 @RestController
-@RequestMapping("/api/backstage/notice")
+@RequestMapping("/back/api/backstage/notice")
 public class BackNoticeController extends BaseController{
 
     private final HttpServletRequest request;

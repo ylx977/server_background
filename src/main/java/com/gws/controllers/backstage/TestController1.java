@@ -1,6 +1,7 @@
 package com.gws.controllers.backstage;
 
 import com.alibaba.fastjson.JSON;
+import com.gws.common.constants.backstage.BackAuthesEnum;
 import com.gws.common.constants.backstage.ErrorMsg;
 import com.gws.controllers.BaseController;
 import com.gws.controllers.JsonResult;
@@ -9,6 +10,7 @@ import com.gws.entity.backstage.BackAuthgroups;
 import com.gws.entity.backstage.createRawTransaction.CreateTXUtils;
 import com.gws.entity.backstage.createRawTransaction.RawTXResp;
 import com.gws.entity.backstage.createRawTransaction.SendTXResp;
+import com.gws.repositories.master.backstage.BackAuthesMaster;
 import com.gws.repositories.query.backstage.BackAuthgroupsQuery;
 import com.gws.repositories.slave.backstage.BackAuthgroupsSlave;
 import com.gws.repositories.slave.backstage.BackUserTokenSlave;
@@ -17,13 +19,13 @@ import com.gws.utils.wallet.utils.Bip32Util;
 import org.hibernate.internal.QueryImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,7 +41,12 @@ public class TestController1 extends BaseController{
     private BackAuthgroupsSlave backAuthgroupsSlave;
 
     @Autowired
+    private BackAuthesMaster backAuthesMaster;
+
+    @Autowired
     private LangReadUtil langReadUtil;
+
+    private HttpServletResponse response;
 
     @PersistenceContext
     private EntityManager em;
@@ -61,6 +68,11 @@ public class TestController1 extends BaseController{
         return "ok";
     }
 
+    @GetMapping("/gox")
+    public String testx(){
+        return "hello world";
+    }
+
     @RequestMapping("/go2")
     public JsonResult test3(@RequestBody BackAuthes backAuthes){
         try {
@@ -73,6 +85,21 @@ public class TestController1 extends BaseController{
             System.out.println("测试方法");
             return new JsonResult("200",LangReadUtil.getProperty("LESS_THAN")+":"+e.getMessage(),null);
         }
+    }
+
+    @RequestMapping("/go3")
+    public JsonResult test4(){
+        //插入所有权限信息
+        List<BackAuthes> backAuthesList = new ArrayList<>();
+        for (BackAuthesEnum backAuthesEnum : BackAuthesEnum.values()) {
+            BackAuthes backAuthes = new BackAuthes();
+            backAuthes.setAuthId(backAuthesEnum.getAuthId());
+            backAuthes.setAuthName(backAuthesEnum.getAuthName());
+            backAuthes.setAuthUrl(backAuthesEnum.getAuthUrl());
+            backAuthesList.add(backAuthes);
+        }
+        backAuthesMaster.save(backAuthesList);
+        return success(null);
     }
 
 

@@ -84,8 +84,10 @@ public class KeyUtils {
         String privateKey1 = getPrivateKey1("1111");
         System.out.println(privateKey1);
         System.out.println(privateKey1.length());
+        System.out.println(HexUtil.hexString2Bytes(privateKey1).length);
         String publicKey = getPublicKey(privateKey1);
         System.out.println(publicKey);
         System.out.println(publicKey.length());
+        System.out.println(HexUtil.hexString2Bytes(publicKey).length);
     }
 }

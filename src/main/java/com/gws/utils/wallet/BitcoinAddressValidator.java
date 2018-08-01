@@ -52,7 +52,7 @@ public class BitcoinAddressValidator {
 
     public static void main(String[] args) {
 
-        assertBitcoin("1F8GoWchAb56ePqftqRvLf7L729JGQSdqW", true);
+        assertBitcoin("1LxGVk2GHonRMDGg5bf5bN6wZPRdFmSGuK", true);
     }
 
     private static void assertBitcoin(String address, boolean expected) {

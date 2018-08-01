@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gws.mapper.FrontUserRechargeMapper">
+    <select id="queryFrontUserRecharge" parameterType="com.gws.entity.backstage.FrontUserBO" resultType="com.gws.entity.backstage.FrontUserRecharge">
+        select
+          *
+        from
+          user_rechargecoin
+        <where>
+            <if test="coinType!=null">
+                coin_type = #{coinType}
+            </if>
+            <if test="uid!=null">
+                uid=#{uid}
+            </if>
+            <if test="personName!=null and personName!=''">
+                person_name like "%"#{personName}"%"
+            </if>
+            <if test="startTime!=null and endTime!=null">
+                ctime between #{startTime} and #{endTime}
+            </if>
+        </where>
+          order by
+            ctime desc
+          limit
+            #{startPage},#{rowNum}
+    </select>
+
+    <select id="queryFrontUserRechargeCount" parameterType="com.gws.entity.backstage.FrontUserBO" resultType="long">
+        select
+          count(*)
+        from
+          user_rechargecoin
+        <where>
+            <if test="coinType!=null">
+                coin_type = #{coinType}
+            </if>
+            <if test="uid!=null">
+                uid=#{uid}
+            </if>
+            <if test="personName!=null and personName!=''">
+                person_name like "%"#{personName}"%"
+            </if>
+            <if test="startTime!=null and endTime!=null">
+                ctime between #{startTime} and #{endTime}
+            </if>
+        </where>
+    </select>
+</mapper>
