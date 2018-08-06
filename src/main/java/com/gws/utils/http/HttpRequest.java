@@ -250,7 +250,13 @@ public class HttpRequest {
 //                }
 //            }).start();
 //        }
-
+//        for(int i = 0; i<100;i++){
+//            new Thread(()->{
+//                String s = sendPost("http://127.0.0.1:8981/contractchainbackground/api/login/test", "{}");
+//                System.out.println(s);
+//            }).start();
+//
+//        }
 
     }
 

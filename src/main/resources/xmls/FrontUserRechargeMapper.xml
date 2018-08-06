@@ -11,13 +11,13 @@
                 coin_type = #{coinType}
             </if>
             <if test="uid!=null">
-                uid=#{uid}
+                and uid=#{uid}
             </if>
             <if test="personName!=null and personName!=''">
-                person_name like "%"#{personName}"%"
+                and person_name like "%"#{personName}"%"
             </if>
             <if test="startTime!=null and endTime!=null">
-                ctime between #{startTime} and #{endTime}
+                and ctime between #{startTime} and #{endTime}
             </if>
         </where>
           order by
@@ -36,13 +36,13 @@
                 coin_type = #{coinType}
             </if>
             <if test="uid!=null">
-                uid=#{uid}
+                and uid=#{uid}
             </if>
             <if test="personName!=null and personName!=''">
-                person_name like "%"#{personName}"%"
+                and person_name like "%"#{personName}"%"
             </if>
             <if test="startTime!=null and endTime!=null">
-                ctime between #{startTime} and #{endTime}
+                and ctime between #{startTime} and #{endTime}
             </if>
         </where>
     </select>

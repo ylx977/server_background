@@ -85,8 +85,8 @@ public class BackLoginController extends BaseController{
 
 //    private static final String STEVEN_PHONE = ConfReadUtil.getProperty("backuser.steven.phonenumber");
 
-    @Value("${backuser.steven.phonenumber}")
-    private String STEVEN_PHONE;
+//    @Value("${backuser.steven.phonenumber}")
+//    private String STEVEN_PHONE;
 
     /**
      * 用户登录操作

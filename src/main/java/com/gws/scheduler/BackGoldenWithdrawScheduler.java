@@ -31,8 +31,8 @@ public class BackGoldenWithdrawScheduler {
     @Autowired
     private BackGoldenWithdrawService backGoldenWithdrawService;
 
-    @Value("${goldenwithdraw.servicecharge}")
-    private String servicecharge;
+//    @Value("${goldenwithdraw.servicecharge}")
+//    private String servicecharge;
     /**
      * 处理超期限黄金提取的处理
      */
