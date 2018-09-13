@@ -117,6 +117,7 @@ public enum ErrorMsg {
     DUPLICATE_PHONE("手机号重复","more than one phone numbers were found"),
     DUPLICATE_EMAIL("邮箱重复","more than one emails were found"),
     ERROR_BITADDRESS_FORMAT("提币地址格式错误","wrong withdraw address format"),
+    MINER_TOO_MUCH("旷工费不能大于提币数","miner amount should not greater than withdraw amount"),
 
 
 

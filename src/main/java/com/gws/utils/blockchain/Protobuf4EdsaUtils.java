@@ -5,6 +5,7 @@ import com.gws.common.constants.backstage.SymbolId;
 import com.gws.utils.ReadConfUtil;
 import com.gws.utils.eddsa.EdDSAEngine;
 import com.gws.utils.eddsa.EdDSAPrivateKey;
+import com.gws.utils.eddsa.EdDSAPublicKey;
 import com.gws.utils.eddsa.spec.EdDSANamedCurveSpec;
 import com.gws.utils.eddsa.spec.EdDSANamedCurveTable;
 import com.gws.utils.eddsa.spec.EdDSAParameterSpec;
@@ -113,8 +114,8 @@ public class Protobuf4EdsaUtils {
 //        if(!flag){
 //            System.out.println(BlockUtils.getErrorMessage(jsonResult));
 //        }
-        ByteString bytes = ByteString.copyFrom(HexUtil.hexString2Bytes("0a4f0a0ae69da8e5878ce99c8432120568617368331a0731323334353536220a796c78e59088e5908c322a037331322a0373323232037031323203703232400148015206c3a6c297c2a058f0beb5d0cc2c"));
-        System.out.println(bytes.toStringUtf8());
+//        ByteString bytes = ByteString.copyFrom(HexUtil.hexString2Bytes("0a4f0a0ae69da8e5878ce99c8432120568617368331a0731323334353536220a796c78e59088e5908c322a037331322a0373323232037031323203703232400148015206c3a6c297c2a058f0beb5d0cc2c"));
+//        System.out.println(bytes.toStringUtf8());
     }
 
 }

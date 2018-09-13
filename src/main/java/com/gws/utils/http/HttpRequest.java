@@ -1,16 +1,17 @@
 package com.gws.utils.http;
 
 import com.alibaba.fastjson.JSON;
-import com.gws.entity.backstage.price.Price;
-import com.gws.entity.backstage.price.PriceResult;
+import com.gws.configuration.backstage.ThreadPoolConfig;
+import lombok.Data;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.Socket;
 import java.net.URL;
-import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * @author ylx
@@ -226,38 +227,75 @@ public class HttpRequest {
         }
     }
 
+    private static final long[] uids = {1,2,3,4,5,6,7,8,9,10,
+            11,12,13,14,15,16,17,18,19,20,
+            21,22,23,24,25,26,27,28,29,30,
+            31,32,33,34,35,36,37,38,39,40,
+            41,42,43,44,45,46,47,48,49,50,
+            51,52,53,54,55,56,57,58,59,60,
+            61,62,63,64,65,66,67,68,69,70,
+            71,72,73,74,75,76,77,78,79,80,
+            81,82,83,84,85,86,87,88,89,90,
+            91,92,93,94,95,96,97,98,99,100};
 
-    public static void main(String[] args) {
-//        Price price = new Price();
-//        price.setCnysgdbuy(4.7);
-//        price.setCnysgdsell(4.8);
-//        price.setSgdusdbuy(1.34);
-//        price.setSgdusdsell(1.35);
-//        price.setSpread(0.2);
-//        String s = sendPost("http://server.codingfine.com:9090/profile/setting", JSON.toJSONString(price));
-//        System.out.println(s);
-//        String s = sendGet("http://market.codingfine.com:9090/data/price");
-//        System.out.println(s);
-//        PriceResult priceResult = JSON.parseObject(s, PriceResult.class);
-//        List<PriceResult.Trade> data = priceResult.getData();
-//        System.out.println(data);
-//        for(int i = 0;i < 200;i++){
-//            final int x = i;
-//            new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    sendPost("http://localhost:8100/mq/api/add","{\"age\":40,\"name\":\"kelly"+x+"\"}");
-//                }
-//            }).start();
-//        }
-//        for(int i = 0; i<100;i++){
-//            new Thread(()->{
-//                String s = sendPost("http://127.0.0.1:8981/contractchainbackground/api/login/test", "{}");
-//                System.out.println(s);
-//            }).start();
+    public static void main(String[] args) throws Exception{
+//        MyRejectExecutionHandler handler = new MyRejectExecutionHandler();
+//        ThreadFactory threadFactory = Executors.defaultThreadFactory();
+//        ExecutorService es = new ThreadPoolExecutor(200,500,60,
+//                TimeUnit.SECONDS,new LinkedBlockingQueue<>(10),threadFactory,handler){
+//            @Override
+//            protected void terminated() {
+//                System.out.println("线程池销毁了。。。");
+//            }
 //
-//        }
+//        };
 
+        for (int i = 0;i<200;i++){
+            new Thread(HttpRequest::send).start();
+        }
+
+
+    }
+
+    public static void send(){
+        for(int i = 0; i<100;i++){
+//            long uid = uids[(int)(Math.random()*100)];
+//            User user = new User();
+//            user.setUid(uid);
+//            es.execute(()->{
+//                String s = sendPost("http://127.0.0.1:8101/localmq/api/miaosha3", JSON.toJSONString(user));
+//                System.out.println(s);
+//            });
+            try {
+                Thread.sleep(1);
+            }catch (Exception e){
+                System.out.println("hahah");
+            }
+            new Thread(()->{
+                long uid = uids[(int)(Math.random()*100)];
+                User user = new User();
+                user.setUid(uid);
+                String s = sendPost("http://127.0.0.1:8101/localmq/api/miaosha4", JSON.toJSONString(user));
+                System.out.println(s);
+            }).start();
+
+        }
+    }
+    @Data
+    public static class User{
+        private Long uid;
+        private String name;
+        private String password;
+        private Integer amount;
+    }
+
+    public static class MyRejectExecutionHandler implements RejectedExecutionHandler{
+
+        @Override
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+            System.out.println("我会继续执行的");
+            executor.execute(r);
+        }
     }
 
 }

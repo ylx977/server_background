@@ -571,6 +571,10 @@ public class BackAssetManagementServiceImpl implements BackAssetManagementServic
         Double minerAmount = one.getMinerAmount();
         // todo 真实到账的币数量 = 提币数量 - 旷工费
         double coinAmount = DecimalUtil.subtract(totalAmount,minerAmount,8,RoundingMode.HALF_EVEN);
+        //确保旷工费要小于提取币的数量
+        if(coinAmount < 0){
+            throw new RuntimeException(LangReadUtil.getProperty(ErrorMsg.MINER_TOO_MUCH));
+        }
         //要打币去的地址
         String toAddress = one.getOuterAddress();
 
